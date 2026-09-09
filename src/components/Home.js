@@ -97,7 +97,6 @@ const Home = () => {
                             </span>
 
                         </div>
-
                     </div>
 
 
@@ -125,67 +124,14 @@ const Home = () => {
 
             </section>
 
-
-            {/* ================= STATS ================= */}
-            <section className="bg-gray-50 border-y">
-
-                <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4">
-
-                    <div className="text-center border-r">
-                        <h2 className="text-3xl font-bold text-primary">
-                            500+
-                        </h2>
-
-                        <p className="text-gray-500">
-                            Employees
-                        </p>
-                    </div>
-
-                    <div className="text-center md:border-r">
-                        <h2 className="text-3xl font-bold text-primary">
-                            50+
-                        </h2>
-
-                        <p className="text-gray-500">
-                            Projects
-                        </p>
-                    </div>
-
-                    <div className="text-center border-r mt-5 md:mt-0">
-                        <h2 className="text-3xl font-bold text-primary">
-                            10K+
-                        </h2>
-
-                        <p className="text-gray-500">
-                            Messages
-                        </p>
-                    </div>
-
-                    <div className="text-center mt-5 md:mt-0">
-                        <h2 className="text-3xl font-bold text-primary">
-                            99.9%
-                        </h2>
-
-                        <p className="text-gray-500">
-                            Availability
-                        </p>
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* ================= FEATURES ================= */}
+            {/* ============== FEATURES ================= */}
             <section className="bg-white py-20">
 
                 <div className="max-w-7xl mx-auto px-6">
 
                     <div className="text-center max-w-2xl mx-auto mb-12">
 
-                        <span className="text-primary font-semibold text-sm">
-                            FEATURES
-                        </span>
+                       
 
                         <h2 className="text-4xl font-bold text-secondary mt-2">
                             Everything Your Team Needs
