@@ -30,6 +30,11 @@ const Login = () => {
     alert("Login button working!");
   };
 
+  const handleaccout =()=>{
+    navigate("/create-account")
+  }
+
+
   return (
     <section className="min-h-[calc(100vh-94px)] bg-gray-50 px-4 py-6 sm:px-6 sm:py-10 flex items-center justify-center">
 
@@ -246,7 +251,7 @@ const Login = () => {
 
               <button
                 type="button"
-                onClick={() => navigate("/register")}
+                onClick={handleaccout}
                 className="mt-1.5 text-sm sm:text-base text-primary font-semibold hover:underline"
               >
                 Create an Account
