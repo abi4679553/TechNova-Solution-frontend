@@ -144,6 +144,8 @@ const CreateAccount = () => {
 
       console.log("Account Details:", formData);
 
+      navigate("/login")
+
       // Backend connect pannumbothu
       // inga account create API call pannalam
     } else {
