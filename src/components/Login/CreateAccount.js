@@ -1,15 +1,38 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RiUserLine, RiIdCardLine, RiMailLine, RiPhoneLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine, } from "react-icons/ri";
+
+import {
+  RiUserLine,
+  RiIdCardLine,
+  RiMailLine,
+  RiPhoneLine,
+  RiLockPasswordLine,
+  RiEyeLine,
+  RiEyeOffLine,
+  RiArrowRightLine,
+  RiShieldCheckLine,
+} from "react-icons/ri";
+
 import logo from "../../Assests/logo.png";
+
 import SendOTP from "./SendOtp";
+import VerifyOTP from "./VerifyOtp";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
 
+  // ================= STATES =================
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Send OTP Popup
   const [showSendOTP, setShowSendOTP] = useState(false);
+
+  // Verify OTP Popup
+  const [showVerifyOTP, setShowVerifyOTP] = useState(false);
+
+  // ================= FORM DATA =================
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -22,7 +45,7 @@ const CreateAccount = () => {
     terms: false,
   });
 
-
+  // ================= HANDLE INPUT CHANGE =================
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -33,17 +56,24 @@ const CreateAccount = () => {
     });
   };
 
+  // ================= CREATE ACCOUNT SUBMIT =================
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Full Name Validation
     if (formData.fullName.trim().length < 3) {
-      alert("please enter a vaild name ")
+      alert("Please enter a valid name");
+      return;
     }
 
+    // Employee ID Validation
     if (formData.employeeId.trim().length < 3) {
-      alert("Please enter your Employee ID")
+      alert("Please enter your Employee ID");
+      return;
     }
 
+    // Email Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(formData.personalEmail)) {
@@ -56,6 +86,7 @@ const CreateAccount = () => {
       return;
     }
 
+    // Phone Validation
     const phoneRegex = /^[6-9]\d{9}$/;
 
     if (!phoneRegex.test(formData.phoneNumber)) {
@@ -63,16 +94,19 @@ const CreateAccount = () => {
       return;
     }
 
+    // Password Validation
     if (formData.password.length < 8) {
-      alert(" Passwords do not match !")
+      alert("Password must contain at least 8 characters");
+      return;
     }
 
-
+    // Confirm Password Validation
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
 
+    // Terms Validation
     if (!formData.terms) {
       alert("Please accept Terms & Conditions");
       return;
@@ -80,8 +114,52 @@ const CreateAccount = () => {
 
     console.log("Create Account Data:", formData);
 
+    // Open Send OTP Popup
     setShowSendOTP(true);
   };
+
+  // ================= SEND OTP =================
+
+  const handleSendOTP = () => {
+    console.log("OTP Sent to:", formData.workEmail);
+
+    // Close Send OTP Popup
+    setShowSendOTP(false);
+
+    // Open Verify OTP Popup
+    setShowVerifyOTP(true);
+  };
+
+  // ================= VERIFY OTP =================
+
+  const handleVerifyOTP = (enteredOTP) => {
+    console.log("Entered OTP:", enteredOTP);
+
+    // Temporary frontend OTP
+    if (enteredOTP === "123456") {
+      alert("OTP Verified Successfully!");
+
+      // Close Verify OTP Popup
+      setShowVerifyOTP(false);
+
+      console.log("Account Details:", formData);
+
+      // Backend connect pannumbothu
+      // inga account create API call pannalam
+    } else {
+      alert("Invalid OTP!");
+    }
+  };
+
+  // ================= RESEND OTP =================
+
+  const handleResendOTP = () => {
+    console.log("OTP Resent to:", formData.workEmail);
+
+    alert("OTP has been resent!");
+  };
+
+  // ================= RETURN =================
 
   return (
     <section className="min-h-[calc(100vh-94px)] bg-gray-50 px-4 py-6 sm:px-6 sm:py-10 flex items-center justify-center">
@@ -93,18 +171,22 @@ const CreateAccount = () => {
         <div className="hidden lg:flex bg-primary text-white p-10 xl:p-14 relative overflow-hidden items-center">
 
           {/* Background Circles */}
+
           <div className="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-white/10" />
 
           <div className="absolute -bottom-40 -right-32 w-96 h-96 rounded-full bg-white/10" />
 
-          <div className=" mb-[50%] relative z-10">
+          <div className="mb-[50%] relative z-10">
 
             {/* Logo */}
+
             <img
               src={logo}
               alt="TechNova Solutions"
               className=""
             />
+
+            {/* Heading */}
 
             <h1 className="text-4xl xl:text-5xl font-bold leading-tight mt-[10%]">
               Join TechNova.
@@ -114,6 +196,8 @@ const CreateAccount = () => {
               Grow.
             </h1>
 
+            {/* Description */}
+
             <p className="mt-6 text-blue-100 text-base xl:text-lg leading-relaxed max-w-md">
               Create your company account and connect
               with your team through one powerful
@@ -121,6 +205,7 @@ const CreateAccount = () => {
             </p>
 
             {/* Security */}
+
             <div className="mt-10 flex items-center gap-3">
 
               <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center">
@@ -128,6 +213,7 @@ const CreateAccount = () => {
               </div>
 
               <div>
+
                 <p className="font-semibold">
                   Secure & Reliable
                 </p>
@@ -135,6 +221,7 @@ const CreateAccount = () => {
                 <p className="text-sm text-blue-100">
                   Your information is protected
                 </p>
+
               </div>
 
             </div>
@@ -148,7 +235,8 @@ const CreateAccount = () => {
 
           <div className="w-full max-w-md mx-auto">
 
-            {/* Mobile Logo */}
+            {/* ================= MOBILE LOGO ================= */}
+
             <div className="flex justify-center lg:hidden mb-6 sm:mb-8">
 
               <img
@@ -159,7 +247,8 @@ const CreateAccount = () => {
 
             </div>
 
-            {/* Heading */}
+            {/* ================= HEADING ================= */}
+
             <div className="mb-6 sm:mb-8">
 
               <h2 className="text-2xl sm:text-3xl font-bold text-secondary">
@@ -179,7 +268,8 @@ const CreateAccount = () => {
               className="space-y-4"
             >
 
-              {/* Full Name */}
+              {/* ================= FULL NAME ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -204,7 +294,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Employee ID */}
+              {/* ================= EMPLOYEE ID ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -229,7 +320,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Personal Email */}
+              {/* ================= PERSONAL EMAIL ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -254,7 +346,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Work Email */}
+              {/* ================= WORK EMAIL ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -279,7 +372,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Phone Number */}
+              {/* ================= PHONE NUMBER ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -297,6 +391,7 @@ const CreateAccount = () => {
                     onChange={handleChange}
                     placeholder="Enter your phone number"
                     required
+                    maxLength="10"
                     className="w-full h-12 pl-11 pr-4 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition"
                   />
 
@@ -304,7 +399,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Password */}
+              {/* ================= PASSWORD ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -327,7 +423,9 @@ const CreateAccount = () => {
 
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xl text-gray-400 hover:text-primary"
                   >
                     {showPassword ? (
@@ -341,7 +439,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Confirm Password */}
+              {/* ================= CONFIRM PASSWORD ================= */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
@@ -365,7 +464,9 @@ const CreateAccount = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
+                      setShowConfirmPassword(
+                        !showConfirmPassword
+                      )
                     }
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xl text-gray-400 hover:text-primary"
                   >
@@ -380,7 +481,8 @@ const CreateAccount = () => {
 
               </div>
 
-              {/* Terms */}
+              {/* ================= TERMS ================= */}
+
               <div className="flex items-start gap-2 pt-1">
 
                 <input
@@ -392,45 +494,71 @@ const CreateAccount = () => {
                 />
 
                 <p className="text-xs sm:text-sm text-gray-500">
+
                   I agree to the{" "}
+
                   <button
                     type="button"
                     className="text-primary font-medium hover:underline"
                   >
                     Terms & Conditions
-                  </button>{" "}
-                  and{" "}
+                  </button>
+
+                  {" "}and{" "}
+
                   <button
                     type="button"
                     className="text-primary font-medium hover:underline"
                   >
                     Privacy Policy
                   </button>
+
                 </p>
 
               </div>
 
-              {/* Create Account Button */}
+              {/* ================= CREATE ACCOUNT BUTTON ================= */}
+
               <button
                 type="submit"
                 className="w-full h-12 sm:h-14 flex items-center justify-center gap-2 bg-primary text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-blue-700 transition shadow-lg shadow-primary/20"
               >
+
                 Create Account
+
                 <RiArrowRightLine className="text-xl" />
+
               </button>
 
-              {showSendOTP && (
-                <SendOTP
-                  email={formData.workEmail}
-                  onClose={() => setShowSendOTP(false)}
-                  onSendOTP={() => {
-                    console.log("OTP Sent");
-                  }}
-                />
-              )}
             </form>
 
-            {/* Login */}
+            {/* ================================================= */}
+            {/* SEND OTP POPUP */}
+            {/* ================================================= */}
+
+            {showSendOTP && (
+              <SendOTP
+                email={formData.workEmail}
+                onClose={() => setShowSendOTP(false)}
+                onSendOTP={handleSendOTP}
+              />
+            )}
+
+            {/* ================================================= */}
+            {/* VERIFY OTP POPUP */}
+            {/* ================================================= */}
+
+            {showVerifyOTP && (
+              <VerifyOTP
+                email={formData.workEmail}
+                onClose={() => setShowVerifyOTP(false)}
+                onVerifyOTP={handleVerifyOTP}
+                onResendOTP={handleResendOTP}
+              />
+            )}
+
+            {/* ================= LOGIN ================= */}
+
             <div className="text-center mt-6">
 
               <p className="text-sm text-gray-500">
@@ -447,7 +575,8 @@ const CreateAccount = () => {
 
             </div>
 
-            {/* Footer */}
+            {/* ================= FOOTER ================= */}
+
             <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-6">
               © 2026 TechNova Solutions. All rights reserved.
             </p>
