@@ -1,23 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  RiUserLine,
-  RiIdCardLine,
-  RiMailLine,
-  RiPhoneLine,
-  RiLockPasswordLine,
-  RiEyeLine,
-  RiEyeOffLine,
-  RiArrowRightLine,
-  RiShieldCheckLine,
-} from "react-icons/ri";
-import logo from "../Assests/logo.png";
+import { RiUserLine, RiIdCardLine, RiMailLine, RiPhoneLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine, } from "react-icons/ri";
+import logo from "../../Assests/logo.png";
+import SendOTP from "./SendOtp";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSendOTP, setShowSendOTP] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -29,6 +21,8 @@ const CreateAccount = () => {
     confirmPassword: "",
     terms: false,
   });
+
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -42,6 +36,38 @@ const CreateAccount = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (formData.fullName.trim().length < 3) {
+      alert("please enter a vaild name ")
+    }
+
+    if (formData.employeeId.trim().length < 3) {
+      alert("Please enter your Employee ID")
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(formData.personalEmail)) {
+      alert("Please enter a valid personal email");
+      return;
+    }
+
+    if (!emailRegex.test(formData.workEmail)) {
+      alert("Please enter a valid work email");
+      return;
+    }
+
+    const phoneRegex = /^[6-9]\d{9}$/;
+
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      alert("Please enter a valid 10-digit phone number");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      alert(" Passwords do not match !")
+    }
+
+
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
@@ -54,10 +80,7 @@ const CreateAccount = () => {
 
     console.log("Create Account Data:", formData);
 
-    alert("Account created successfully!");
-
-    // OTP page-ku later navigate pannalam
-    // navigate("/verify-otp");
+    setShowSendOTP(true);
   };
 
   return (
@@ -396,6 +419,15 @@ const CreateAccount = () => {
                 <RiArrowRightLine className="text-xl" />
               </button>
 
+              {showSendOTP && (
+                <SendOTP
+                  email={formData.workEmail}
+                  onClose={() => setShowSendOTP(false)}
+                  onSendOTP={() => {
+                    console.log("OTP Sent");
+                  }}
+                />
+              )}
             </form>
 
             {/* Login */}
