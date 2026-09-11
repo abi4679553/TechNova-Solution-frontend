@@ -1,20 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  RiUserLine,
-  RiIdCardLine,
-  RiMailLine,
-  RiPhoneLine,
-  RiLockPasswordLine,
-  RiEyeLine,
-  RiEyeOffLine,
-  RiArrowRightLine,
-  RiShieldCheckLine,
-} from "react-icons/ri";
-
+import { RiUserLine,RiIdCardLine,RiMailLine,RiPhoneLine,RiLockPasswordLine,RiEyeLine,RiEyeOffLine,RiArrowRightLine,RiShieldCheckLine,} from "react-icons/ri";
 import logo from "../../Assests/logo.png";
-
 import SendOTP from "./SendOtp";
 import VerifyOTP from "./VerifyOtp";
 
