@@ -52,7 +52,7 @@ const Login = () => {
 
             <img
               src={logo}
-              alt="TechNova Solutions"
+              alt="TechNova Solutions private limitates"
               className=""
             />
 
