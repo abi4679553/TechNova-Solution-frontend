@@ -1,10 +1,8 @@
 import Header from "./components/Header";
 import Home from "./components/Home";
 import { Route, Routes } from "react-router-dom";
-
 import Login from "./components/Login/Login.js";
 import CreateAccount from "./components/Login/CreateAccount.js";
-
 import Employee from "./components/Employees";
 import JobDetails from "./components/JobDetails";
 import ApplyJob from "./components/ApplyJob";
