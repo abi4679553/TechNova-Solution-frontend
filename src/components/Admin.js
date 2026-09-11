@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const AdminApplications = () => {
+const Admin = () => {
     const [applications, setApplications] = useState([]);
 
     useEffect(() => {
@@ -52,4 +52,4 @@ const AdminApplications = () => {
     );
 };
 
-export default AdminApplications;
+export default Admin;
