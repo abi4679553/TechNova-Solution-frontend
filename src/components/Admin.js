@@ -232,15 +232,8 @@ const AdminPage = () => {
     return "bg-yellow-50 text-yellow-600 border-yellow-200";
   };
 
-  // ================= RETURN =================
-
   return (
     <div className="min-h-screen bg-gray-50 flex">
-
-      {/* ================================================= */}
-      {/* SIDEBAR */}
-      {/* ================================================= */}
-
       <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 fixed left-0 top-0 bottom-0 flex-col">
 
         {/* LOGO */}
@@ -292,8 +285,6 @@ const AdminPage = () => {
 
         </nav>
 
-        {/* LOGOUT */}
-
         <div className="p-4 border-t border-gray-100">
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50">
@@ -304,10 +295,6 @@ const AdminPage = () => {
         </div>
 
       </aside>
-
-      {/* ================================================= */}
-      {/* MAIN CONTENT */}
-      {/* ================================================= */}
 
       <main className="w-full lg:ml-64">
 
