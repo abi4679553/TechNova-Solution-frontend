@@ -166,8 +166,7 @@ const Employee = () => {
 
         alert("Portfolio sent for approval!");
 
-        // Go to Admin Dashboard
-        navigate("/admin");
+       
     };
 
     // ================= PORTFOLIO PAGE =================
@@ -403,6 +402,7 @@ const Employee = () => {
                             {/* SEND */}
 
                             <button
+                            type="button"
                                 onClick={handleSendForApproval}
                                 className="w-full mt-4 bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition"
                             >

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+
 import {
   RiDashboardLine,
   RiTeamLine,
@@ -13,9 +14,20 @@ import {
   RiCloseLine,
   RiCheckLine,
   RiArrowRightLine,
+  RiNotification3Line,
 } from "react-icons/ri";
 
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
 const AdminPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const selectedJobId = location.state?.selectedJobId;
+
   // ================= JOB DATA =================
 
   const [jobs, setJobs] = useState([
@@ -87,10 +99,27 @@ const AdminPage = () => {
       ],
       totalHours: 9,
       status: "Rejected",
-      rejectionReason: "Estimated hours need to be revised.",
+      rejectionReason:
+        "Estimated hours need to be revised.",
       submittedDate: "08 Sep 2026",
     },
   ]);
+
+  // ================= OTHER STATES =================
+
+  const [selectedJob, setSelectedJob] = useState(null);
+
+  const [search, setSearch] = useState("");
+
+  const [filter, setFilter] = useState("All");
+
+  const [showRejectBox, setShowRejectBox] =
+    useState(false);
+
+  const [rejectReason, setRejectReason] = useState("");
+
+  const [pendingCount, setPendingCount] =
+    useState(0);
 
   // ================= GET EMPLOYEE REQUESTS =================
 
@@ -114,17 +143,33 @@ const AdminPage = () => {
     }
   }, []);
 
-  // ================= STATES =================
+  // ================= NOTIFICATION COUNT =================
 
-  const [selectedJob, setSelectedJob] = useState(null);
+  useEffect(() => {
+    const savedRequests = JSON.parse(
+      localStorage.getItem("pendingJobRequests") || "[]"
+    );
 
-  const [search, setSearch] = useState("");
+    const pendingRequests = savedRequests.filter(
+      (job) => job.status === "Pending"
+    );
 
-  const [filter, setFilter] = useState("All");
+    setPendingCount(pendingRequests.length);
+  }, [jobs]);
 
-  const [showRejectBox, setShowRejectBox] = useState(false);
+  // ================= OPEN REQUEST FROM NOTIFICATION PAGE =================
 
-  const [rejectReason, setRejectReason] = useState("");
+  useEffect(() => {
+    if (!selectedJobId) return;
+
+    const job = jobs.find(
+      (item) => item.id === Number(selectedJobId)
+    );
+
+    if (job) {
+      setSelectedJob(job);
+    }
+  }, [selectedJobId, jobs]);
 
   // ================= STATUS COUNTS =================
 
@@ -168,23 +213,42 @@ const AdminPage = () => {
   const handleAccept = () => {
     if (!selectedJob) return;
 
+    const updatedJob = {
+      ...selectedJob,
+      status: "Accepted",
+      rejectionReason: "",
+    };
+
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === selectedJob.id
-          ? {
-              ...job,
-              status: "Accepted",
-              rejectionReason: "",
-            }
+          ? updatedJob
           : job
       )
     );
 
-    setSelectedJob((prev) => ({
-      ...prev,
-      status: "Accepted",
-      rejectionReason: "",
-    }));
+    setSelectedJob(updatedJob);
+
+    // Update localStorage
+    const savedRequests = JSON.parse(
+      localStorage.getItem("pendingJobRequests") || "[]"
+    );
+
+    const updatedRequests = savedRequests.map(
+      (job) =>
+        job.id === selectedJob.id
+          ? updatedJob
+          : job
+    );
+
+    localStorage.setItem(
+      "pendingJobRequests",
+      JSON.stringify(updatedRequests)
+    );
+
+    setPendingCount((prev) =>
+      Math.max(prev - 1, 0)
+    );
   };
 
   // ================= REJECT JOB =================
@@ -196,23 +260,42 @@ const AdminPage = () => {
       return;
     }
 
+    const updatedJob = {
+      ...selectedJob,
+      status: "Rejected",
+      rejectionReason: rejectReason.trim(),
+    };
+
     setJobs((prevJobs) =>
       prevJobs.map((job) =>
         job.id === selectedJob.id
-          ? {
-              ...job,
-              status: "Rejected",
-              rejectionReason: rejectReason.trim(),
-            }
+          ? updatedJob
           : job
       )
     );
 
-    setSelectedJob((prev) => ({
-      ...prev,
-      status: "Rejected",
-      rejectionReason: rejectReason.trim(),
-    }));
+    setSelectedJob(updatedJob);
+
+    // Update localStorage
+    const savedRequests = JSON.parse(
+      localStorage.getItem("pendingJobRequests") || "[]"
+    );
+
+    const updatedRequests = savedRequests.map(
+      (job) =>
+        job.id === selectedJob.id
+          ? updatedJob
+          : job
+    );
+
+    localStorage.setItem(
+      "pendingJobRequests",
+      JSON.stringify(updatedRequests)
+    );
+
+    setPendingCount((prev) =>
+      Math.max(prev - 1, 0)
+    );
 
     setRejectReason("");
     setShowRejectBox(false);
@@ -327,8 +410,34 @@ const AdminPage = () => {
 
           </div>
 
-          <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
-            <RiUserLine className="text-xl" />
+          {/* RIGHT SIDE */}
+
+          <div className="flex items-center gap-4">
+
+            {/* NOTIFICATION */}
+
+            <button
+              type="button"
+              onClick={() => navigate("/notifications")}
+              className="relative w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200"
+            >
+
+              <RiNotification3Line className="text-xl" />
+
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                  {pendingCount}
+                </span>
+              )}
+
+            </button>
+
+            {/* ADMIN PROFILE */}
+
+            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+              <RiUserLine className="text-xl" />
+            </div>
+
           </div>
 
         </header>
@@ -452,7 +561,9 @@ const AdminPage = () => {
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
                   placeholder="Search employee or task..."
                   className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
@@ -561,7 +672,7 @@ const AdminPage = () => {
 
                     </div>
 
-                    {/* TASK ONLY */}
+                    {/* TASK */}
 
                     <div className="mt-5">
 
@@ -623,7 +734,15 @@ const AdminPage = () => {
               </div>
 
               <button
-                onClick={() => setSelectedJob(null)}
+                type="button"
+                onClick={() => {
+                  setSelectedJob(null);
+
+                  navigate("/admin", {
+                    replace: true,
+                    state: {},
+                  });
+                }}
                 className="w-9 h-9 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center"
               >
                 <RiCloseLine className="text-xl" />
@@ -721,24 +840,27 @@ const AdminPage = () => {
 
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
 
-                  {selectedJob.tasks.map((task) => (
+                  {selectedJob.tasks &&
+                    selectedJob.tasks.map(
+                      (task) => (
 
-                    <div
-                      key={task.name}
-                      className="flex items-center justify-between px-4 py-3 border-b last:border-b-0 border-gray-100"
-                    >
+                        <div
+                          key={task.name}
+                          className="flex items-center justify-between px-4 py-3 border-b last:border-b-0 border-gray-100"
+                        >
 
-                      <span className="text-sm text-gray-600">
-                        {task.name}
-                      </span>
+                          <span className="text-sm text-gray-600">
+                            {task.name}
+                          </span>
 
-                      <span className="text-sm font-semibold text-secondary">
-                        {task.hours} hours
-                      </span>
+                          <span className="text-sm font-semibold text-secondary">
+                            {task.hours} hours
+                          </span>
 
-                    </div>
+                        </div>
 
-                  ))}
+                      )
+                    )}
 
                   <div className="flex items-center justify-between px-4 py-4 bg-gray-50">
 
@@ -761,19 +883,19 @@ const AdminPage = () => {
               {selectedJob.status === "Rejected" &&
                 selectedJob.rejectionReason && (
 
-                <div className="mt-5 bg-red-50 border border-red-100 rounded-xl p-4">
+                  <div className="mt-5 bg-red-50 border border-red-100 rounded-xl p-4">
 
-                  <p className="text-sm font-semibold text-red-600">
-                    Rejection Reason
-                  </p>
+                    <p className="text-sm font-semibold text-red-600">
+                      Rejection Reason
+                    </p>
 
-                  <p className="text-sm text-red-500 mt-1">
-                    {selectedJob.rejectionReason}
-                  </p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {selectedJob.rejectionReason}
+                    </p>
 
-                </div>
+                  </div>
 
-              )}
+                )}
 
               {/* REJECT INPUT */}
 
@@ -788,7 +910,9 @@ const AdminPage = () => {
                   <textarea
                     value={rejectReason}
                     onChange={(e) =>
-                      setRejectReason(e.target.value)
+                      setRejectReason(
+                        e.target.value
+                      )
                     }
                     rows="4"
                     placeholder="Enter reason for rejecting this job..."
@@ -816,6 +940,7 @@ const AdminPage = () => {
                   <>
 
                     <button
+                      type="button"
                       onClick={() => {
                         setShowRejectBox(true);
                       }}
@@ -826,6 +951,7 @@ const AdminPage = () => {
                     </button>
 
                     <button
+                      type="button"
                       onClick={handleAccept}
                       className="flex-1 h-11 rounded-xl bg-primary hover:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2"
                     >
@@ -838,7 +964,15 @@ const AdminPage = () => {
                 ) : selectedJob.status === "Rejected" ? (
 
                   <button
-                    onClick={() => setSelectedJob(null)}
+                    type="button"
+                    onClick={() => {
+                      setSelectedJob(null);
+
+                      navigate("/admin", {
+                        replace: true,
+                        state: {},
+                      });
+                    }}
                     className="w-full h-11 rounded-xl bg-gray-100 text-gray-700 font-semibold text-sm"
                   >
                     Close
@@ -847,7 +981,15 @@ const AdminPage = () => {
                 ) : (
 
                   <button
-                    onClick={() => setSelectedJob(null)}
+                    type="button"
+                    onClick={() => {
+                      setSelectedJob(null);
+
+                      navigate("/admin", {
+                        replace: true,
+                        state: {},
+                      });
+                    }}
                     className="w-full h-11 rounded-xl bg-green-50 text-green-600 font-semibold text-sm flex items-center justify-center gap-2"
                   >
                     <RiCheckLine />
@@ -863,8 +1005,11 @@ const AdminPage = () => {
               {showRejectBox && (
 
                 <button
+                  type="button"
                   onClick={handleReject}
-                  disabled={rejectReason.trim() === ""}
+                  disabled={
+                    rejectReason.trim() === ""
+                  }
                   className={`w-full h-11 mt-3 rounded-xl font-semibold text-sm transition ${
                     rejectReason.trim() === ""
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"

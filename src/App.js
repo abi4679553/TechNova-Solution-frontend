@@ -6,6 +6,7 @@ import CreateAccount from "./components/Login/CreateAccount.js";
 import Employee from "./components/Employees";
 
 import Admin from "./components/Admin.js";
+import Notifications from "./components/Notifications.js";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/employee" element={<Employee />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/notifications" element= {< Notifications/>}/>
       </Routes>
 
     </div>
