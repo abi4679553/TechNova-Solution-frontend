@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   RiDashboardLine,
   RiTeamLine,
@@ -92,6 +92,28 @@ const AdminPage = () => {
     },
   ]);
 
+  // ================= GET EMPLOYEE REQUESTS =================
+
+  useEffect(() => {
+    const savedRequests = JSON.parse(
+      localStorage.getItem("pendingJobRequests") || "[]"
+    );
+
+    if (savedRequests.length > 0) {
+      setJobs((prevJobs) => {
+        const existingIds = new Set(
+          prevJobs.map((job) => job.id)
+        );
+
+        const newRequests = savedRequests.filter(
+          (job) => !existingIds.has(job.id)
+        );
+
+        return [...newRequests, ...prevJobs];
+      });
+    }
+  }, []);
+
   // ================= STATES =================
 
   const [selectedJob, setSelectedJob] = useState(null);
@@ -109,7 +131,7 @@ const AdminPage = () => {
   const totalEmployees = new Set(
     jobs.map((job) => job.employeeId)
   ).size;
-  
+
   const acceptedJobs = jobs.filter(
     (job) => job.status === "Accepted"
   ).length;
@@ -121,8 +143,7 @@ const AdminPage = () => {
   // ================= FILTER =================
 
   const filteredJobs = jobs.filter((job) => {
-    const searchText =
-      search.toLowerCase();
+    const searchText = search.toLowerCase();
 
     const matchesSearch =
       job.employeeId
@@ -181,8 +202,7 @@ const AdminPage = () => {
           ? {
               ...job,
               status: "Rejected",
-              rejectionReason:
-                rejectReason.trim(),
+              rejectionReason: rejectReason.trim(),
             }
           : job
       )
@@ -191,8 +211,7 @@ const AdminPage = () => {
     setSelectedJob((prev) => ({
       ...prev,
       status: "Rejected",
-      rejectionReason:
-        rejectReason.trim(),
+      rejectionReason: rejectReason.trim(),
     }));
 
     setRejectReason("");
@@ -297,6 +316,7 @@ const AdminPage = () => {
         <header className="h-20 bg-white border-b border-gray-200 px-5 sm:px-8 flex items-center justify-between">
 
           <div>
+
             <h2 className="text-xl sm:text-2xl font-bold text-secondary">
               Admin Dashboard
             </h2>
@@ -304,6 +324,7 @@ const AdminPage = () => {
             <p className="text-sm text-gray-500 mt-1">
               Manage employee job requests
             </p>
+
           </div>
 
           <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
@@ -320,7 +341,7 @@ const AdminPage = () => {
           {/* SUMMARY CARDS */}
           {/* ================================================= */}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
 
             {/* TOTAL EMPLOYEES */}
 
@@ -329,6 +350,7 @@ const AdminPage = () => {
               <div className="flex items-center justify-between">
 
                 <div>
+
                   <p className="text-sm text-gray-500">
                     Total Employees
                   </p>
@@ -336,6 +358,7 @@ const AdminPage = () => {
                   <h3 className="text-3xl font-bold text-secondary mt-2">
                     {totalEmployees}
                   </h3>
+
                 </div>
 
                 <div className="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
@@ -346,9 +369,6 @@ const AdminPage = () => {
 
             </div>
 
-           
-         
-
             {/* ACCEPTED */}
 
             <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
@@ -356,6 +376,7 @@ const AdminPage = () => {
               <div className="flex items-center justify-between">
 
                 <div>
+
                   <p className="text-sm text-gray-500">
                     Accepted Jobs
                   </p>
@@ -363,6 +384,7 @@ const AdminPage = () => {
                   <h3 className="text-3xl font-bold text-secondary mt-2">
                     {acceptedJobs}
                   </h3>
+
                 </div>
 
                 <div className="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
@@ -380,6 +402,7 @@ const AdminPage = () => {
               <div className="flex items-center justify-between">
 
                 <div>
+
                   <p className="text-sm text-gray-500">
                     Rejected Jobs
                   </p>
@@ -387,6 +410,7 @@ const AdminPage = () => {
                   <h3 className="text-3xl font-bold text-secondary mt-2">
                     {rejectedJobs}
                   </h3>
+
                 </div>
 
                 <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
@@ -408,6 +432,7 @@ const AdminPage = () => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
 
               <div>
+
                 <h2 className="text-xl font-bold text-secondary">
                   Job Requests
                 </h2>
@@ -415,6 +440,7 @@ const AdminPage = () => {
                 <p className="text-sm text-gray-500 mt-1">
                   Review employee submitted jobs
                 </p>
+
               </div>
 
               {/* SEARCH */}
@@ -426,9 +452,7 @@ const AdminPage = () => {
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
-                  }
+                  onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search employee or task..."
                   className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
@@ -537,7 +561,7 @@ const AdminPage = () => {
 
                     </div>
 
-                    {/* TASK */}
+                    {/* TASK ONLY */}
 
                     <div className="mt-5">
 
@@ -545,52 +569,11 @@ const AdminPage = () => {
                         {job.task}
                       </h3>
 
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                        {job.description}
-                      </p>
-
                     </div>
 
-                    {/* TASK HOURS */}
+                    {/* VIEW DETAILS */}
 
-                    <div className="mt-4 space-y-2">
-
-                      {job.tasks.map((task) => (
-
-                        <div
-                          key={task.name}
-                          className="flex items-center justify-between text-sm"
-                        >
-
-                          <span className="text-gray-600">
-                            {task.name}
-                          </span>
-
-                          <span className="font-medium text-secondary">
-                            {task.hours} hours
-                          </span>
-
-                        </div>
-
-                      ))}
-
-                    </div>
-
-                    {/* TOTAL */}
-
-                    <div className="border-t border-gray-100 mt-4 pt-4 flex items-center justify-between">
-
-                      <div>
-
-                        <p className="text-xs text-gray-400">
-                          Total Estimated Time
-                        </p>
-
-                        <p className="font-bold text-secondary">
-                          {job.totalHours} hours
-                        </p>
-
-                      </div>
+                    <div className="border-t border-gray-100 mt-4 pt-4 flex items-center justify-end">
 
                       <div className="flex items-center gap-1 text-primary text-sm font-semibold">
                         View Details
@@ -659,6 +642,7 @@ const AdminPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                   <div>
+
                     <p className="text-xs text-gray-400">
                       Employee ID
                     </p>
@@ -666,9 +650,11 @@ const AdminPage = () => {
                     <p className="font-semibold text-secondary mt-1">
                       {selectedJob.employeeId}
                     </p>
+
                   </div>
 
                   <div>
+
                     <p className="text-xs text-gray-400">
                       Employee Name
                     </p>
@@ -676,9 +662,11 @@ const AdminPage = () => {
                     <p className="font-semibold text-secondary mt-1">
                       {selectedJob.employeeName}
                     </p>
+
                   </div>
 
                   <div>
+
                     <p className="text-xs text-gray-400">
                       Submitted Date
                     </p>
@@ -686,9 +674,11 @@ const AdminPage = () => {
                     <p className="font-semibold text-secondary mt-1">
                       {selectedJob.submittedDate}
                     </p>
+
                   </div>
 
                   <div>
+
                     <p className="text-xs text-gray-400">
                       Status
                     </p>
@@ -700,6 +690,7 @@ const AdminPage = () => {
                     >
                       {selectedJob.status}
                     </span>
+
                   </div>
 
                 </div>
@@ -770,19 +761,19 @@ const AdminPage = () => {
               {selectedJob.status === "Rejected" &&
                 selectedJob.rejectionReason && (
 
-                  <div className="mt-5 bg-red-50 border border-red-100 rounded-xl p-4">
+                <div className="mt-5 bg-red-50 border border-red-100 rounded-xl p-4">
 
-                    <p className="text-sm font-semibold text-red-600">
-                      Rejection Reason
-                    </p>
+                  <p className="text-sm font-semibold text-red-600">
+                    Rejection Reason
+                  </p>
 
-                    <p className="text-sm text-red-500 mt-1">
-                      {selectedJob.rejectionReason}
-                    </p>
+                  <p className="text-sm text-red-500 mt-1">
+                    {selectedJob.rejectionReason}
+                  </p>
 
-                  </div>
+                </div>
 
-                )}
+              )}
 
               {/* REJECT INPUT */}
 
@@ -805,9 +796,11 @@ const AdminPage = () => {
                   />
 
                   {rejectReason.trim() === "" && (
+
                     <p className="text-xs text-red-500 mt-1">
                       Please enter a rejection reason
                     </p>
+
                   )}
 
                 </div>
@@ -821,6 +814,7 @@ const AdminPage = () => {
                 {selectedJob.status === "Pending" ? (
 
                   <>
+
                     <button
                       onClick={() => {
                         setShowRejectBox(true);
@@ -838,6 +832,7 @@ const AdminPage = () => {
                       <RiCheckLine />
                       Accept
                     </button>
+
                   </>
 
                 ) : selectedJob.status === "Rejected" ? (

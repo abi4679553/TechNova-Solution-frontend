@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiMailLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine,} from "react-icons/ri";
 import logo from "../../Assests/logo.png";
+import { jsx } from "react/jsx-runtime";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,17 +24,55 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    console.log(formData);
-    alert("Login button working!");
-  };
+  try {
+    const response = await fetch("http://localhost:5000/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: formData.email,
+        password: formData.password,
+      }),
+    });
 
-  const handleaccout =()=>{
-    navigate("/create-account")
+    const data = await response.json();
+
+    console.log(data);
+
+    if (!data.success) {
+      alert(data.message);
+      return;
+    }
+
+    localStorage.setItem("currentUser",JSON.stringify(data.user));
+
+    alert("Login successful!");
+
+
+
+    if(data.user.role === "employee")
+    {
+      navigate("/employee");
+
+    }
+    else if(data.user.role === "admin")
+    {
+      navigate("/admin")
+    }
+    
+  } catch (error) {
+    console.log("Login error:", error);
+    alert("Unable to connect to server");
   }
+};
 
+const handleaccount = () => {
+  navigate("/create-account");
+}
 
   return (
     <section className="min-h-[calc(100vh-94px)] bg-gray-50 px-4 py-6 sm:px-6 sm:py-10 flex items-center justify-center">
@@ -251,7 +290,7 @@ const Login = () => {
 
               <button
                 type="button"
-                onClick={handleaccout}
+                onClick={()=> navigate("/create-account")}
                 className="mt-1.5 text-sm sm:text-base text-primary font-semibold hover:underline"
               >
                 Create an Account

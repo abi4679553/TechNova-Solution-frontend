@@ -16,6 +16,7 @@ import {
 import logo from "../../Assests/logo.png";
 import SendOTP from "./SendOtp";
 import VerifyOTP from "./VerifyOtp";
+import { RollerCoaster } from "lucide-react";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -246,34 +247,83 @@ const CreateAccount = () => {
 
   // ================= SEND OTP =================
 
-  const handleSendOTP = () => {
-    console.log("OTP Sent to:", formData.workEmail);
+  const handleSendOTP = async () => {
+    try{
+      const response = await fetch("http://localhost:5000/send-otp", {
+        method:"POST",
+        headers:{
+          "Content-type":"application/json",
+        },
+        body: JSON.stringify({
+          email:formData.personalEmail,
+        }),
+      });
+      const data = await response.json();
 
-    setShowSendOTP(false);
-    setShowVerifyOTP(true);
+      console.log(data);
+
+      if(!data.success)
+      {
+        alert(data.message);
+        return;
+      }
+
+      alert("OTP sent successfully");
+      setShowSendOTP(false);
+      setShowVerifyOTP(true);
+
+    }
+    catch(error){
+      console.log("send otp error:",error);
+      alert("unable to connect to server");
+
+    }
   };
 
   // ================= VERIFY OTP =================
 
-  const handleVerifyOTP = (enteredOTP) => {
-    console.log("Entered OTP:", enteredOTP);
+const handleVerifyOTP = async (enteredOTP) => {
+  try {
+    const requestData = {
+      fullName: formData.fullName,
+      employeeId: formData.employeeId,
+      personalEmail: formData.personalEmail,
+      workEmail: formData.workEmail,
+      phoneNumber: formData.phoneNumber,
+      password: formData.password,
+      enterOtp: enteredOTP,
+      role: "employee",
+    };
 
-    // Temporary frontend OTP
-    if (enteredOTP === "123456") {
-      alert("OTP Verified Successfully!");
+    console.log("VERIFY REQUEST:", requestData);
 
-      setShowVerifyOTP(false);
+    const response = await fetch("http://localhost:5000/Verify-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestData),
+    });
 
-      console.log("Account Details:", formData);
+    const data = await response.json();
 
-      navigate("/login");
+    console.log("VERIFY RESPONSE:", data);
 
-      // Backend connect pannumbothu
-      // inga account create API call pannalam
-    } else {
-      alert("Invalid OTP!");
+    if (!data.success) {
+      alert(data.message);
+      return;
     }
-  };
+
+    alert("Account created successfully!");
+
+    setShowVerifyOTP(false);
+    navigate("/login");
+
+  } catch (error) {
+    console.log("Verify OTP error:", error);
+    alert("Unable to connect to server");
+  }
+};
 
   // ================= RESEND OTP =================
 
