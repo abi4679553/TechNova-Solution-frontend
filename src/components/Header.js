@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {RiSearchLine, RiMenuLine, RiCloseLine,} from "react-icons/ri";
-import logo from "../Assests/logo.png";
+import logo from "../assests/logo.png";
 import { useNavigate } from "react-router-dom";
 
 const Header = () => {

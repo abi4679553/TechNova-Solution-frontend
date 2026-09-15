@@ -7,7 +7,7 @@ import {
     RiArrowLeftLine,
 } from "react-icons/ri";
 
-import logo from "../Assests/logo.png";
+import logo from "../assests/logo.png";
 
 const Employee = () => {
     const navigate = useNavigate();

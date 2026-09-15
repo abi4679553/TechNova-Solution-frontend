@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiMailLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine,} from "react-icons/ri";
-import logo from "../../Assests/logo.png";
+import logo from "../../assests/logo.png";
 import { jsx } from "react/jsx-runtime";
 
 const Login = () => {
