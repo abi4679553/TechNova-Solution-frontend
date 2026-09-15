@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiMailLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine,} from "react-icons/ri";
 import logo from "../../Assests/logo.png";
-import { jsx } from "react/jsx-runtime";
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -290,7 +290,7 @@ const handleaccount = () => {
 
               <button
                 type="button"
-                onClick={()=> navigate("/create-account")}
+                onClick={()=> navigate(handleaccount)}
                 className="mt-1.5 text-sm sm:text-base text-primary font-semibold hover:underline"
               >
                 Create an Account

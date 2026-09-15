@@ -16,7 +16,6 @@ import {
 import logo from "../../Assests/logo.png";
 import SendOTP from "./SendOtp";
 import VerifyOTP from "./VerifyOtp";
-import { RollerCoaster } from "lucide-react";
 
 const CreateAccount = () => {
   const navigate = useNavigate();
@@ -33,7 +32,7 @@ const CreateAccount = () => {
 
   const [formData, setFormData] = useState({
     fullName: "",
-    employeeId: "",
+    Id: "",
     personalEmail: "",
     workEmail: "",
     phoneNumber: "",
@@ -60,7 +59,8 @@ const CreateAccount = () => {
 
     let errorMessage = "";
 
-    // Full Name
+    // ================= FULL NAME =================
+
     if (name === "fullName") {
       if (value.trim() === "") {
         errorMessage = "Full name is required";
@@ -69,16 +69,21 @@ const CreateAccount = () => {
       }
     }
 
-    // Employee ID
-    if (name === "employeeId") {
+    // ================= ID =================
+
+    if (name === "Id") {
+      const employeeIdRegex = /^(EMP|ADM)\d{3,}$/i;
+
       if (value.trim() === "") {
         errorMessage = "Employee ID is required";
-      } else if (value.trim().length < 3) {
-        errorMessage = "Employee ID must contain at least 3 characters";
+      } else if (!employeeIdRegex.test(value.trim())) {
+        errorMessage =
+          "Enter valid Employee ID (EMP001 or ADM001)";
       }
     }
 
-    // Email
+    // ================= EMAIL =================
+
     if (name === "personalEmail" || name === "workEmail") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -95,7 +100,8 @@ const CreateAccount = () => {
       }
     }
 
-    // Phone Number
+    // ================= PHONE NUMBER =================
+
     if (name === "phoneNumber") {
       const phoneRegex = /^[6-9]\d{9}$/;
 
@@ -106,15 +112,17 @@ const CreateAccount = () => {
       }
     }
 
-    // Password
+    // ================= PASSWORD =================
+
     if (name === "password") {
       if (value === "") {
         errorMessage = "Password is required";
       } else if (value.length < 8) {
-        errorMessage = "Password must contain at least 8 characters";
+        errorMessage =
+          "Password must contain at least 8 characters";
       }
 
-      // Confirm password also check
+      // Confirm password check
       if (formData.confirmPassword !== "") {
         setErrors((prev) => ({
           ...prev,
@@ -129,7 +137,8 @@ const CreateAccount = () => {
       }
     }
 
-    // Confirm Password
+    // ================= CONFIRM PASSWORD =================
+
     if (name === "confirmPassword") {
       if (value === "") {
         errorMessage = "Please confirm your password";
@@ -138,7 +147,8 @@ const CreateAccount = () => {
       }
     }
 
-    // Terms
+    // ================= TERMS =================
+
     if (name === "terms") {
       if (!checked) {
         errorMessage = "Please accept Terms & Conditions";
@@ -156,57 +166,76 @@ const CreateAccount = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Full Name
+    // ================= FULL NAME =================
+
     if (formData.fullName.trim() === "") {
       newErrors.fullName = "Full name is required";
     } else if (formData.fullName.trim().length < 3) {
-      newErrors.fullName = "Name must contain at least 3 characters";
+      newErrors.fullName =
+        "Name must contain at least 3 characters";
     }
 
-    // Employee ID
-    if (formData.employeeId.trim() === "") {
-      newErrors.employeeId = "Employee ID is required";
-    } else if (formData.employeeId.trim().length < 3) {
-      newErrors.employeeId =
-        "Employee ID must contain at least 3 characters";
+    // ================= ID =================
+
+    const employeeIdRegex = /^(EMP|ADM)\d{3,}$/i;
+
+    if (formData.Id.trim() === "") {
+      newErrors.Id = "Employee ID is required";
+    } else if (!employeeIdRegex.test(formData.Id.trim())) {
+      newErrors.Id =
+        "Enter valid Employee ID (EMP001 or ADM001)";
     }
 
-    // Email
+    // ================= EMAIL =================
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (formData.personalEmail.trim() === "") {
-      newErrors.personalEmail = "Personal email is required";
-    } else if (!emailRegex.test(formData.personalEmail.trim())) {
+      newErrors.personalEmail =
+        "Personal email is required";
+    } else if (
+      !emailRegex.test(formData.personalEmail.trim())
+    ) {
       newErrors.personalEmail =
         "Please enter a valid personal email";
     }
 
     if (formData.workEmail.trim() === "") {
-      newErrors.workEmail = "Work email is required";
-    } else if (!emailRegex.test(formData.workEmail.trim())) {
+      newErrors.workEmail =
+        "Work email is required";
+    } else if (
+      !emailRegex.test(formData.workEmail.trim())
+    ) {
       newErrors.workEmail =
         "Please enter a valid work email";
     }
 
-    // Phone
+    // ================= PHONE =================
+
     const phoneRegex = /^[6-9]\d{9}$/;
 
     if (formData.phoneNumber.trim() === "") {
-      newErrors.phoneNumber = "Phone number is required";
-    } else if (!phoneRegex.test(formData.phoneNumber.trim())) {
+      newErrors.phoneNumber =
+        "Phone number is required";
+    } else if (
+      !phoneRegex.test(formData.phoneNumber.trim())
+    ) {
       newErrors.phoneNumber =
         "Enter a valid 10-digit phone number";
     }
 
-    // Password
+    // ================= PASSWORD =================
+
     if (formData.password === "") {
-      newErrors.password = "Password is required";
+      newErrors.password =
+        "Password is required";
     } else if (formData.password.length < 8) {
       newErrors.password =
         "Password must contain at least 8 characters";
     }
 
-    // Confirm Password
+    // ================= CONFIRM PASSWORD =================
+
     if (formData.confirmPassword === "") {
       newErrors.confirmPassword =
         "Please confirm your password";
@@ -217,7 +246,8 @@ const CreateAccount = () => {
         "Passwords do not match";
     }
 
-    // Terms
+    // ================= TERMS =================
+
     if (!formData.terms) {
       newErrors.terms =
         "Please accept Terms & Conditions";
@@ -241,94 +271,103 @@ const CreateAccount = () => {
 
     console.log("Create Account Data:", formData);
 
-    // Open Send OTP Popup
     setShowSendOTP(true);
   };
 
   // ================= SEND OTP =================
 
   const handleSendOTP = async () => {
-    try{
-      const response = await fetch("http://localhost:5000/send-otp", {
-        method:"POST",
-        headers:{
-          "Content-type":"application/json",
-        },
-        body: JSON.stringify({
-          email:formData.personalEmail,
-        }),
-      });
+    try {
+      const response = await fetch(
+        "http://localhost:5000/send-otp",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-type": "application/json",
+          },
+
+          body: JSON.stringify({
+            email: formData.personalEmail,
+          }),
+        }
+      );
+
       const data = await response.json();
 
       console.log(data);
 
-      if(!data.success)
-      {
+      if (!data.success) {
         alert(data.message);
         return;
       }
 
       alert("OTP sent successfully");
+
       setShowSendOTP(false);
       setShowVerifyOTP(true);
-
-    }
-    catch(error){
-      console.log("send otp error:",error);
-      alert("unable to connect to server");
-
+    } catch (error) {
+      console.log("send otp error:", error);
+      alert("Unable to connect to server");
     }
   };
 
   // ================= VERIFY OTP =================
 
-const handleVerifyOTP = async (enteredOTP) => {
-  try {
-    const requestData = {
-      fullName: formData.fullName,
-      employeeId: formData.employeeId,
-      personalEmail: formData.personalEmail,
-      workEmail: formData.workEmail,
-      phoneNumber: formData.phoneNumber,
-      password: formData.password,
-      enterOtp: enteredOTP,
-      role: "employee",
-    };
+  const handleVerifyOTP = async (enteredOTP) => {
+    try {
+      const requestData = {
+        fullName: formData.fullName,
+        Id: formData.Id,
+        personalEmail: formData.personalEmail,
+        workEmail: formData.workEmail,
+        phoneNumber: formData.phoneNumber,
+        password: formData.password,
+        enterOtp: enteredOTP,
+      };
 
-    console.log("VERIFY REQUEST:", requestData);
+      console.log("VERIFY REQUEST:", requestData);
 
-    const response = await fetch("http://localhost:5000/Verify-otp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-    });
+      const response = await fetch(
+        "http://localhost:5000/Verify-otp",
+        {
+          method: "POST",
 
-    const data = await response.json();
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-    console.log("VERIFY RESPONSE:", data);
+          body: JSON.stringify(requestData),
+        }
+      );
 
-    if (!data.success) {
-      alert(data.message);
-      return;
+      const data = await response.json();
+
+      console.log("VERIFY RESPONSE:", data);
+
+      if (!data.success) {
+        alert(data.message);
+        return;
+      }
+
+      alert("Account created successfully!");
+
+      setShowVerifyOTP(false);
+
+      navigate("/login");
+    } catch (error) {
+      console.log("Verify OTP error:", error);
+      alert("Unable to connect to server");
     }
-
-    alert("Account created successfully!");
-
-    setShowVerifyOTP(false);
-    navigate("/login");
-
-  } catch (error) {
-    console.log("Verify OTP error:", error);
-    alert("Unable to connect to server");
-  }
-};
+  };
 
   // ================= RESEND OTP =================
 
   const handleResendOTP = () => {
-    console.log("OTP Resent to:", formData.workEmail);
+    console.log(
+      "OTP Resent to:",
+      formData.workEmail
+    );
 
     alert("OTP has been resent!");
   };
@@ -476,12 +515,12 @@ const handleVerifyOTP = async (enteredOTP) => {
 
               </div>
 
-              {/* ================= EMPLOYEE ID ================= */}
+              {/* ================= ID ================= */}
 
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
-                  Employee ID
+                  ID
                 </label>
 
                 <div className="relative">
@@ -490,13 +529,13 @@ const handleVerifyOTP = async (enteredOTP) => {
 
                   <input
                     type="text"
-                    name="employeeId"
-                    value={formData.employeeId}
+                    name="Id"
+                    value={formData.Id}
                     onChange={handleChange}
-                    placeholder="Enter your employee ID"
+                    placeholder="Enter your ID"
                     required
                     className={`w-full h-12 pl-11 pr-4 border rounded-xl text-sm outline-none transition ${
-                      errors.employeeId
+                      errors.Id
                         ? "border-red-400 focus:border-red-500"
                         : "border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/10"
                     }`}
@@ -504,9 +543,9 @@ const handleVerifyOTP = async (enteredOTP) => {
 
                 </div>
 
-                {errors.employeeId && (
+                {errors.Id && (
                   <p className="text-red-500 text-xs mt-1">
-                    {errors.employeeId}
+                    {errors.Id}
                   </p>
                 )}
 
@@ -684,7 +723,11 @@ const handleVerifyOTP = async (enteredOTP) => {
                   <RiLockPasswordLine className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xl text-gray-400" />
 
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={
+                      showConfirmPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
@@ -782,7 +825,7 @@ const handleVerifyOTP = async (enteredOTP) => {
 
             </form>
 
-            {/* ================= SEND OTP POPUP ================= */}
+            {/* ================= SEND OTP ================= */}
 
             {showSendOTP && (
               <SendOTP
@@ -792,7 +835,7 @@ const handleVerifyOTP = async (enteredOTP) => {
               />
             )}
 
-            {/* ================= VERIFY OTP POPUP ================= */}
+            {/* ================= VERIFY OTP ================= */}
 
             {showVerifyOTP && (
               <VerifyOTP
