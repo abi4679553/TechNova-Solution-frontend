@@ -208,52 +208,109 @@ const AdminPage = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // ================= ACCEPT JOB =================
+  // =================================================
+  // ACCEPT JOB + SEND APPROVAL EMAIL
+  // =================================================
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
+
     if (!selectedJob) return;
 
-    const updatedJob = {
-      ...selectedJob,
-      status: "Accepted",
-      rejectionReason: "",
-    };
+    try {
 
-    setJobs((prevJobs) =>
-      prevJobs.map((job) =>
-        job.id === selectedJob.id
-          ? updatedJob
-          : job
-      )
-    );
+      console.log(
+        "Approving Employee:",
+        selectedJob.employeeId
+      );
 
-    setSelectedJob(updatedJob);
+      // ================= BACKEND API =================
 
-    // Update localStorage
-    const savedRequests = JSON.parse(
-      localStorage.getItem("pendingJobRequests") || "[]"
-    );
+      const response = await fetch(
+        `http://localhost:5000/approve/${selectedJob.employeeId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    const updatedRequests = savedRequests.map(
-      (job) =>
-        job.id === selectedJob.id
-          ? updatedJob
-          : job
-    );
+      const data = await response.json();
 
-    localStorage.setItem(
-      "pendingJobRequests",
-      JSON.stringify(updatedRequests)
-    );
+      console.log("Backend Response:", data);
 
-    setPendingCount((prev) =>
-      Math.max(prev - 1, 0)
-    );
+      // ================= API ERROR =================
+
+      if (!response.ok) {
+        alert(data.message);
+        return;
+      }
+
+      // ================= UPDATE JOB STATUS =================
+
+      const updatedJob = {
+        ...selectedJob,
+        status: "Accepted",
+        rejectionReason: "",
+      };
+
+      setJobs((prevJobs) =>
+        prevJobs.map((job) =>
+          job.id === selectedJob.id
+            ? updatedJob
+            : job
+        )
+      );
+
+      setSelectedJob(updatedJob);
+
+      // ================= UPDATE LOCAL STORAGE =================
+
+      const savedRequests = JSON.parse(
+        localStorage.getItem("pendingJobRequests") || "[]"
+      );
+
+      const updatedRequests = savedRequests.map(
+        (job) =>
+          job.id === selectedJob.id
+            ? updatedJob
+            : job
+      );
+
+      localStorage.setItem(
+        "pendingJobRequests",
+        JSON.stringify(updatedRequests)
+      );
+
+      // ================= UPDATE NOTIFICATION COUNT =================
+
+      setPendingCount((prev) =>
+        Math.max(prev - 1, 0)
+      );
+
+      // ================= SUCCESS =================
+
+      alert(
+        "Employee approved and email sent successfully!"
+      );
+
+    } catch (error) {
+
+      console.log(
+        "Approval Error:",
+        error
+      );
+
+      alert(
+        "Something went wrong while approving employee"
+      );
+    }
   };
 
   // ================= REJECT JOB =================
 
   const handleReject = () => {
+
     if (!selectedJob) return;
 
     if (rejectReason.trim() === "") {
@@ -277,6 +334,7 @@ const AdminPage = () => {
     setSelectedJob(updatedJob);
 
     // Update localStorage
+
     const savedRequests = JSON.parse(
       localStorage.getItem("pendingJobRequests") || "[]"
     );
@@ -304,6 +362,7 @@ const AdminPage = () => {
   // ================= STATUS STYLE =================
 
   const getStatusStyle = (status) => {
+
     if (status === "Accepted") {
       return "bg-green-50 text-green-600 border-green-200";
     }
@@ -317,14 +376,19 @@ const AdminPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+
+      {/* ================= SIDEBAR ================= */}
+
       <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 fixed left-0 top-0 bottom-0 flex-col">
 
         {/* LOGO */}
 
         <div className="h-20 px-6 flex items-center border-b border-gray-100">
+
           <h1 className="text-xl font-bold text-primary">
             TechNova Solutions
           </h1>
+
         </div>
 
         {/* NAVIGATION */}
@@ -332,38 +396,59 @@ const AdminPage = () => {
         <nav className="flex-1 p-4 space-y-2">
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium">
+
             <RiDashboardLine className="text-xl" />
+
             Dashboard
+
           </button>
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
+
             <RiTeamLine className="text-xl" />
+
             Employees
+
           </button>
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
+
             <RiFileList3Line className="text-xl" />
+
             Job Requests
+
           </button>
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
+
             <RiCheckboxCircleLine className="text-xl" />
+
             Accepted Jobs
+
           </button>
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
+
             <RiCloseCircleLine className="text-xl" />
+
             Rejected Jobs
+
           </button>
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
+
             <RiBarChartBoxLine className="text-xl" />
+
             Reports
+
           </button>
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
+
             <RiSettings3Line className="text-xl" />
+
             Settings
+
           </button>
 
         </nav>
@@ -371,13 +456,18 @@ const AdminPage = () => {
         <div className="p-4 border-t border-gray-100">
 
           <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50">
+
             <RiLogoutBoxLine className="text-xl" />
+
             Logout
+
           </button>
 
         </div>
 
       </aside>
+
+      {/* ================= MAIN ================= */}
 
       <main className="w-full lg:ml-64">
 
@@ -422,7 +512,9 @@ const AdminPage = () => {
             {/* ADMIN PROFILE */}
 
             <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+
               <RiUserLine className="text-xl" />
+
             </div>
 
           </div>
@@ -433,9 +525,7 @@ const AdminPage = () => {
 
         <div className="p-5 sm:p-8">
 
-          {/* ================================================= */}
           {/* SUMMARY CARDS */}
-          {/* ================================================= */}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
 
@@ -458,7 +548,9 @@ const AdminPage = () => {
                 </div>
 
                 <div className="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+
                   <RiTeamLine className="text-2xl" />
+
                 </div>
 
               </div>
@@ -484,7 +576,9 @@ const AdminPage = () => {
                 </div>
 
                 <div className="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
+
                   <RiCheckboxCircleLine className="text-2xl" />
+
                 </div>
 
               </div>
@@ -510,7 +604,9 @@ const AdminPage = () => {
                 </div>
 
                 <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
+
                   <RiCloseCircleLine className="text-2xl" />
+
                 </div>
 
               </div>
@@ -519,9 +615,7 @@ const AdminPage = () => {
 
           </div>
 
-          {/* ================================================= */}
           {/* JOB REQUESTS */}
-          {/* ================================================= */}
 
           <div className="mt-8">
 
@@ -585,9 +679,7 @@ const AdminPage = () => {
 
             </div>
 
-            {/* ================================================= */}
             {/* JOB CARDS */}
-            {/* ================================================= */}
 
             {filteredJobs.length === 0 ? (
 
@@ -630,7 +722,9 @@ const AdminPage = () => {
                         <div className="flex items-center gap-2">
 
                           <div className="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
+
                             <RiUserLine className="text-xl" />
+
                           </div>
 
                           <div>
@@ -674,8 +768,11 @@ const AdminPage = () => {
                     <div className="border-t border-gray-100 mt-4 pt-4 flex items-center justify-end">
 
                       <div className="flex items-center gap-1 text-primary text-sm font-semibold">
+
                         View Details
+
                         <RiArrowRightLine />
+
                       </div>
 
                     </div>
@@ -694,9 +791,7 @@ const AdminPage = () => {
 
       </main>
 
-      {/* ================================================= */}
-      {/* JOB DETAILS MODAL */}
-      {/* ================================================= */}
+      {/* ================= JOB DETAILS MODAL ================= */}
 
       {selectedJob && (
 
@@ -732,7 +827,9 @@ const AdminPage = () => {
                 }}
                 className="w-9 h-9 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center"
               >
+
                 <RiCloseLine className="text-xl" />
+
               </button>
 
             </div>
@@ -933,8 +1030,11 @@ const AdminPage = () => {
                       }}
                       className="flex-1 h-11 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 font-semibold text-sm flex items-center justify-center gap-2"
                     >
+
                       <RiCloseCircleLine />
+
                       Reject
+
                     </button>
 
                     <button
@@ -942,8 +1042,11 @@ const AdminPage = () => {
                       onClick={handleAccept}
                       className="flex-1 h-11 rounded-xl bg-primary hover:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2"
                     >
+
                       <RiCheckLine />
+
                       Accept
+
                     </button>
 
                   </>
@@ -979,8 +1082,11 @@ const AdminPage = () => {
                     }}
                     className="w-full h-11 rounded-xl bg-green-50 text-green-600 font-semibold text-sm flex items-center justify-center gap-2"
                   >
+
                     <RiCheckLine />
+
                     Job Accepted
+
                   </button>
 
                 )}
