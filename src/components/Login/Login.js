@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RiMailLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine,} from "react-icons/ri";
-import logo from "../../assests/logo.png";
-import { jsx } from "react/jsx-runtime";
+import logo from "../../Assests/logo.png";
+import { useContext } from "react";
+import { AuthContext } from "../../AuthContext";
 
 const Login = () => {
+  const {checkAuth} = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +32,7 @@ const Login = () => {
   try {
     const response = await fetch("http://localhost:5000/login", {
       method: "POST",
+      credentials:"include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -49,6 +52,8 @@ const Login = () => {
     }
 
     localStorage.setItem("currentUser",JSON.stringify(data.user));
+
+    await checkAuth();
 
     alert("Login successful!");
 

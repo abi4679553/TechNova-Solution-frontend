@@ -13,7 +13,7 @@ import {
   RiShieldCheckLine,
 } from "react-icons/ri";
 
-import logo from "../../assests/logo.png";
+import logo from "../../Assests/logo.png";
 import SendOTP from "./SendOtp";
 import VerifyOTP from "./VerifyOtp";
 

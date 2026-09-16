@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../assests/logo.png";
+import logo from "../Assests/logo.png";
 import { RiArrowRightLine, RiShieldCheckLine, RiTeamLine, RiChat3Line, RiMegaphoneLine, RiTaskLine, RiDashboardLine, RiNotification3Line, RiUserSettingsLine, RiCheckboxCircleLine, } from "react-icons/ri";
 
 const Home = () => {
