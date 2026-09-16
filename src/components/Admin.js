@@ -1,1129 +1,1475 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useEffect, useState } from "react";
 import {
-  RiDashboardLine,
-  RiTeamLine,
-  RiFileList3Line,
-  RiCheckboxCircleLine,
-  RiCloseCircleLine,
-  RiBarChartBoxLine,
-  RiSettings3Line,
-  RiLogoutBoxLine,
-  RiSearchLine,
-  RiUserLine,
-  RiCloseLine,
-  RiCheckLine,
-  RiArrowRightLine,
-  RiNotification3Line,
+    RiAddLine,
+    RiBriefcaseLine,
+    RiCheckLine,
+    RiCloseLine,
+    RiEyeLine,
+    RiNotification3Line,
+    RiDeleteBinLine,
+    RiTimeLine,
+    RiUserLine,
+    RiCalendarLine,
 } from "react-icons/ri";
 
-import {
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+const Admin = () => {
+    // ================= STATES =================
 
-const AdminPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+    const [showCreateJob, setShowCreateJob] = useState(false);
+    const [selectedRequest, setSelectedRequest] = useState(null);
 
-  const selectedJobId = location.state?.selectedJobId;
+    const [jobs, setJobs] = useState([]);
+    const [requests, setRequests] = useState([]);
 
-  // ================= JOB DATA =================
+    const [formData, setFormData] = useState({
+        jobTitle: "",
+        description: "",
+        deadline: "",
+        jobType: "Full Time",
+        employeeId: "",
+    });
 
-  const [jobs, setJobs] = useState([
-    {
-      id: 1,
-      employeeId: "EMP001",
-      employeeName: "Kumar",
-      task: "Portfolio",
-      description:
-        "Create a responsive personal portfolio website using modern frontend technologies.",
-      tasks: [
-        { name: "HTML", hours: 3 },
-        { name: "CSS", hours: 4 },
-        { name: "JavaScript", hours: 6 },
-        { name: "React", hours: 8 },
-      ],
-      totalHours: 21,
-      status: "Pending",
-      submittedDate: "10 Sep 2026",
-    },
-
-    {
-      id: 2,
-      employeeId: "EMP002",
-      employeeName: "Arun",
-      task: "E-Commerce Website",
-      description:
-        "Develop an e-commerce website with product listing and shopping cart functionality.",
-      tasks: [
-        { name: "HTML", hours: 3 },
-        { name: "CSS", hours: 4 },
-        { name: "JavaScript", hours: 7 },
-        { name: "React", hours: 10 },
-      ],
-      totalHours: 24,
-      status: "Pending",
-      submittedDate: "10 Sep 2026",
-    },
-
-    {
-      id: 3,
-      employeeId: "EMP003",
-      employeeName: "Ravi",
-      task: "Admin Dashboard",
-      description:
-        "Create an admin dashboard with responsive layout and dashboard components.",
-      tasks: [
-        { name: "HTML", hours: 2 },
-        { name: "CSS", hours: 4 },
-        { name: "JavaScript", hours: 5 },
-        { name: "React", hours: 7 },
-      ],
-      totalHours: 18,
-      status: "Accepted",
-      submittedDate: "09 Sep 2026",
-    },
-
-    {
-      id: 4,
-      employeeId: "EMP004",
-      employeeName: "Suresh",
-      task: "Landing Page",
-      description:
-        "Design and develop a responsive company landing page.",
-      tasks: [
-        { name: "HTML", hours: 2 },
-        { name: "CSS", hours: 3 },
-        { name: "JavaScript", hours: 4 },
-      ],
-      totalHours: 9,
-      status: "Rejected",
-      rejectionReason:
-        "Estimated hours need to be revised.",
-      submittedDate: "08 Sep 2026",
-    },
-  ]);
-
-  // ================= OTHER STATES =================
-
-  const [selectedJob, setSelectedJob] = useState(null);
-
-  const [search, setSearch] = useState("");
-
-  const [filter, setFilter] = useState("All");
-
-  const [showRejectBox, setShowRejectBox] =
-    useState(false);
-
-  const [rejectReason, setRejectReason] = useState("");
-
-  const [pendingCount, setPendingCount] =
-    useState(0);
-
-  // ================= GET EMPLOYEE REQUESTS =================
-
-  useEffect(() => {
-    const savedRequests = JSON.parse(
-      localStorage.getItem("pendingJobRequests") || "[]"
-    );
-
-    if (savedRequests.length > 0) {
-      setJobs((prevJobs) => {
-        const existingIds = new Set(
-          prevJobs.map((job) => job.id)
-        );
-
-        const newRequests = savedRequests.filter(
-          (job) => !existingIds.has(job.id)
-        );
-
-        return [...newRequests, ...prevJobs];
-      });
-    }
-  }, []);
-
-  // ================= NOTIFICATION COUNT =================
-
-  useEffect(() => {
-    const savedRequests = JSON.parse(
-      localStorage.getItem("pendingJobRequests") || "[]"
-    );
-
-    const pendingRequests = savedRequests.filter(
-      (job) => job.status === "Pending"
-    );
-
-    setPendingCount(pendingRequests.length);
-  }, [jobs]);
-
-  // ================= OPEN REQUEST FROM NOTIFICATION PAGE =================
-
-  useEffect(() => {
-    if (!selectedJobId) return;
-
-    const job = jobs.find(
-      (item) => item.id === Number(selectedJobId)
-    );
-
-    if (job) {
-      setSelectedJob(job);
-    }
-  }, [selectedJobId, jobs]);
-
-  // ================= STATUS COUNTS =================
-
-  const totalEmployees = new Set(
-    jobs.map((job) => job.employeeId)
-  ).size;
-
-  const acceptedJobs = jobs.filter(
-    (job) => job.status === "Accepted"
-  ).length;
-
-  const rejectedJobs = jobs.filter(
-    (job) => job.status === "Rejected"
-  ).length;
-
-  // ================= FILTER =================
-
-  const filteredJobs = jobs.filter((job) => {
-    const searchText = search.toLowerCase();
-
-    const matchesSearch =
-      job.employeeId
-        .toLowerCase()
-        .includes(searchText) ||
-      job.employeeName
-        .toLowerCase()
-        .includes(searchText) ||
-      job.task
-        .toLowerCase()
-        .includes(searchText);
-
-    const matchesFilter =
-      filter === "All" ||
-      job.status === filter;
-
-    return matchesSearch && matchesFilter;
-  });
-
-  // =================================================
-  // ACCEPT JOB + SEND APPROVAL EMAIL
-  // =================================================
-
-  const handleAccept = async () => {
-
-    if (!selectedJob) return;
-
-    try {
-
-      console.log(
-        "Approving Employee:",
-        selectedJob.employeeId
-      );
-
-      // ================= BACKEND API =================
-
-      const response = await fetch(
-        `http://localhost:5000/approve/${selectedJob.employeeId}`,
+    const [subtasks, setSubtasks] = useState([
         {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+            id: `task-${Date.now()}`,
+            name: "",
+            requiredHours: "",
+        },
+    ]);
 
-      const data = await response.json();
+    // ================= EMPLOYEES =================
+    // Direct 5 employee IDs
 
-      console.log("Backend Response:", data);
+    const employees = [
+        {
+            employeeId: "EMP001",
+            fullName: "EMP001",
+        },
+        {
+            employeeId: "EMP002",
+            fullName: "EMP002",
+        },
+        {
+            employeeId: "EMP003",
+            fullName: "EMP003",
+        },
+        {
+            employeeId: "EMP004",
+            fullName: "EMP004",
+        },
+        {
+            employeeId: "EMP005",
+            fullName: "EMP005",
+        },
+    ];
 
-      // ================= API ERROR =================
+    // ================= LOAD DATA =================
 
-      if (!response.ok) {
-        alert(data.message);
-        return;
-      }
+    useEffect(() => {
+        loadData();
 
-      // ================= UPDATE JOB STATUS =================
+        window.addEventListener("storage", loadData);
 
-      const updatedJob = {
-        ...selectedJob,
-        status: "Accepted",
-        rejectionReason: "",
-      };
+        return () => {
+            window.removeEventListener("storage", loadData);
+        };
+    }, []);
 
-      setJobs((prevJobs) =>
-        prevJobs.map((job) =>
-          job.id === selectedJob.id
-            ? updatedJob
-            : job
-        )
-      );
+    const loadData = () => {
+        const savedJobs = JSON.parse(
+            localStorage.getItem("jobs") || "[]"
+        );
 
-      setSelectedJob(updatedJob);
+        const savedRequests = JSON.parse(
+            localStorage.getItem("pendingJobRequests") || "[]"
+        );
 
-      // ================= UPDATE LOCAL STORAGE =================
-
-      const savedRequests = JSON.parse(
-        localStorage.getItem("pendingJobRequests") || "[]"
-      );
-
-      const updatedRequests = savedRequests.map(
-        (job) =>
-          job.id === selectedJob.id
-            ? updatedJob
-            : job
-      );
-
-      localStorage.setItem(
-        "pendingJobRequests",
-        JSON.stringify(updatedRequests)
-      );
-
-      // ================= UPDATE NOTIFICATION COUNT =================
-
-      setPendingCount((prev) =>
-        Math.max(prev - 1, 0)
-      );
-
-      // ================= SUCCESS =================
-
-      alert(
-        "Employee approved and email sent successfully!"
-      );
-
-    } catch (error) {
-
-      console.log(
-        "Approval Error:",
-        error
-      );
-
-      alert(
-        "Something went wrong while approving employee"
-      );
-    }
-  };
-
-  // ================= REJECT JOB =================
-
-  const handleReject = () => {
-
-    if (!selectedJob) return;
-
-    if (rejectReason.trim() === "") {
-      return;
-    }
-
-    const updatedJob = {
-      ...selectedJob,
-      status: "Rejected",
-      rejectionReason: rejectReason.trim(),
+        setJobs(savedJobs);
+        setRequests(savedRequests);
     };
 
-    setJobs((prevJobs) =>
-      prevJobs.map((job) =>
-        job.id === selectedJob.id
-          ? updatedJob
-          : job
-      )
+    // ================= FORM CHANGE =================
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    // ================= ADD SUBTASK =================
+
+    const addSubtask = () => {
+        setSubtasks((prev) => [
+            ...prev,
+            {
+                id: `task-${Date.now()}-${Math.random()}`,
+                name: "",
+                requiredHours: "",
+            },
+        ]);
+    };
+
+    // ================= SUBTASK CHANGE =================
+
+    const handleSubtaskChange = (
+        index,
+        field,
+        value
+    ) => {
+        setSubtasks((prev) => {
+            const updated = [...prev];
+
+            updated[index] = {
+                ...updated[index],
+                [field]: value,
+            };
+
+            return updated;
+        });
+    };
+
+    // ================= DELETE SUBTASK =================
+
+    const deleteSubtask = (index) => {
+        if (subtasks.length === 1) {
+            alert("At least one subtask is required.");
+            return;
+        }
+
+        setSubtasks((prev) =>
+            prev.filter((_, i) => i !== index)
+        );
+    };
+
+    // ================= RESET FORM =================
+
+    const resetForm = () => {
+        setFormData({
+            jobTitle: "",
+            description: "",
+            deadline: "",
+            jobType: "Full Time",
+            employeeId: "",
+        });
+
+        setSubtasks([
+            {
+                id: `task-${Date.now()}`,
+                name: "",
+                requiredHours: "",
+            },
+        ]);
+    };
+
+    // ================= CREATE JOB =================
+
+    const handleCreateJob = (e) => {
+        e.preventDefault();
+
+        if (!formData.jobTitle.trim()) {
+            alert("Please enter job title.");
+            return;
+        }
+
+        if (!formData.description.trim()) {
+            alert("Please enter job description.");
+            return;
+        }
+
+        if (!formData.deadline) {
+            alert("Please select deadline.");
+            return;
+        }
+
+        if (!formData.employeeId) {
+            alert("Please assign this job to an employee.");
+            return;
+        }
+
+        const validSubtasks = subtasks.filter(
+            (task) => task.name.trim() !== ""
+        );
+
+        if (validSubtasks.length === 0) {
+            alert("Please add at least one subtask.");
+            return;
+        }
+
+        const invalidSubtask = validSubtasks.find(
+            (task) =>
+                !task.requiredHours ||
+                Number(task.requiredHours) <= 0
+        );
+
+        if (invalidSubtask) {
+            alert(
+                `Please enter required hours for "${invalidSubtask.name}".`
+            );
+            return;
+        }
+
+        // ================= SELECTED EMPLOYEE =================
+
+        const selectedEmployee = employees.find(
+            (employee) =>
+                employee.employeeId ===
+                formData.employeeId
+        );
+
+        if (!selectedEmployee) {
+            alert("Employee not found.");
+            return;
+        }
+
+        // ================= NEW JOB =================
+
+        const newJob = {
+            id: Date.now(),
+
+            jobTitle: formData.jobTitle,
+
+            description: formData.description,
+
+            deadline: formData.deadline,
+
+            jobType: formData.jobType,
+
+            assignedTo: {
+                employeeId:
+                    selectedEmployee.employeeId,
+
+                employeeName:
+                    selectedEmployee.fullName,
+            },
+
+            subtasks: validSubtasks.map(
+                (task) => ({
+                    id: task.id,
+
+                    name: task.name,
+
+                    requiredHours:
+                        Number(task.requiredHours),
+                })
+            ),
+
+            status: "Assigned",
+
+            createdDate:
+                new Date().toLocaleDateString(
+                    "en-GB",
+                    {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                    }
+                ),
+
+            employeeEstimate: null,
+
+            approvalRequestId: null,
+        };
+
+        // ================= SAVE JOB =================
+
+        const existingJobs = JSON.parse(
+            localStorage.getItem("jobs") || "[]"
+        );
+
+        const updatedJobs = [
+            ...existingJobs,
+            newJob,
+        ];
+
+        localStorage.setItem(
+            "jobs",
+            JSON.stringify(updatedJobs)
+        );
+
+        setJobs(updatedJobs);
+
+        alert(
+            `Job created and assigned to ${selectedEmployee.employeeId}.`
+        );
+
+        resetForm();
+
+        setShowCreateJob(false);
+    };
+
+    // ================= ACCEPT =================
+
+    const handleAccept = (request) => {
+        const confirmed = window.confirm(
+            `Accept "${request.jobTitle}" submitted by ${request.employeeName}?`
+        );
+
+        if (!confirmed) return;
+
+        // Update request
+
+        const updatedRequests =
+            requests.map((item) => {
+                if (
+                    String(item.id) !==
+                    String(request.id)
+                ) {
+                    return item;
+                }
+
+                return {
+                    ...item,
+                    status: "Accepted",
+                    reviewedDate:
+                        new Date().toLocaleDateString(
+                            "en-GB"
+                        ),
+                };
+            });
+
+        localStorage.setItem(
+            "pendingJobRequests",
+            JSON.stringify(updatedRequests)
+        );
+
+        setRequests(updatedRequests);
+
+        // Update job
+
+        const updatedJobs = jobs.map((job) => {
+            if (
+                String(job.id) !==
+                String(request.jobId)
+            ) {
+                return job;
+            }
+
+            return {
+                ...job,
+                status: "Accepted",
+            };
+        });
+
+        localStorage.setItem(
+            "jobs",
+            JSON.stringify(updatedJobs)
+        );
+
+        setJobs(updatedJobs);
+
+        setSelectedRequest(null);
+
+        alert("Job accepted successfully.");
+    };
+
+    // ================= REJECT =================
+
+    const handleReject = (request) => {
+        const reason = window.prompt(
+            "Enter rejection reason:"
+        );
+
+        if (reason === null) return;
+
+        if (!reason.trim()) {
+            alert("Please enter rejection reason.");
+            return;
+        }
+
+        // Update request
+
+        const updatedRequests =
+            requests.map((item) => {
+                if (
+                    String(item.id) !==
+                    String(request.id)
+                ) {
+                    return item;
+                }
+
+                return {
+                    ...item,
+                    status: "Rejected",
+                    rejectionReason: reason,
+                    reviewedDate:
+                        new Date().toLocaleDateString(
+                            "en-GB"
+                        ),
+                };
+            });
+
+        localStorage.setItem(
+            "pendingJobRequests",
+            JSON.stringify(updatedRequests)
+        );
+
+        setRequests(updatedRequests);
+
+        // Update job
+
+        const updatedJobs = jobs.map((job) => {
+            if (
+                String(job.id) !==
+                String(request.jobId)
+            ) {
+                return job;
+            }
+
+            return {
+                ...job,
+                status: "Rejected",
+                rejectionReason: reason,
+            };
+        });
+
+        localStorage.setItem(
+            "jobs",
+            JSON.stringify(updatedJobs)
+        );
+
+        setJobs(updatedJobs);
+
+        setSelectedRequest(null);
+
+        alert("Job rejected.");
+    };
+
+    // ================= DELETE JOB =================
+
+    const handleDeleteJob = (jobId) => {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this job?"
+        );
+
+        if (!confirmed) return;
+
+        const updatedJobs = jobs.filter(
+            (job) =>
+                String(job.id) !==
+                String(jobId)
+        );
+
+        localStorage.setItem(
+            "jobs",
+            JSON.stringify(updatedJobs)
+        );
+
+        setJobs(updatedJobs);
+    };
+
+    // ================= PENDING REQUESTS =================
+
+    const pendingRequests = requests.filter(
+        (request) =>
+            request.status === "Pending"
     );
 
-    setSelectedJob(updatedJob);
+    return (
+        <main className="min-h-screen bg-gray-50">
 
-    // Update localStorage
+            {/* ================= HEADER ================= */}
 
-    const savedRequests = JSON.parse(
-      localStorage.getItem("pendingJobRequests") || "[]"
-    );
+            <section className="bg-white border-b border-gray-200">
 
-    const updatedRequests = savedRequests.map(
-      (job) =>
-        job.id === selectedJob.id
-          ? updatedJob
-          : job
-    );
+                <div className="max-w-6xl mx-auto px-5 py-7">
 
-    localStorage.setItem(
-      "pendingJobRequests",
-      JSON.stringify(updatedRequests)
-    );
+                    <div className="flex items-center justify-between">
 
-    setPendingCount((prev) =>
-      Math.max(prev - 1, 0)
-    );
+                        <div>
 
-    setRejectReason("");
-    setShowRejectBox(false);
-  };
-
-  // ================= STATUS STYLE =================
-
-  const getStatusStyle = (status) => {
-
-    if (status === "Accepted") {
-      return "bg-green-50 text-green-600 border-green-200";
-    }
-
-    if (status === "Rejected") {
-      return "bg-red-50 text-red-600 border-red-200";
-    }
-
-    return "bg-yellow-50 text-yellow-600 border-yellow-200";
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-
-      {/* ================= SIDEBAR ================= */}
-
-      <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 fixed left-0 top-0 bottom-0 flex-col">
-
-        {/* LOGO */}
-
-        <div className="h-20 px-6 flex items-center border-b border-gray-100">
-
-          <h1 className="text-xl font-bold text-primary">
-            TechNova Solutions
-          </h1>
-
-        </div>
-
-        {/* NAVIGATION */}
-
-        <nav className="flex-1 p-4 space-y-2">
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white font-medium">
-
-            <RiDashboardLine className="text-xl" />
-
-            Dashboard
-
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
-
-            <RiTeamLine className="text-xl" />
-
-            Employees
-
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
-
-            <RiFileList3Line className="text-xl" />
-
-            Job Requests
-
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
-
-            <RiCheckboxCircleLine className="text-xl" />
-
-            Accepted Jobs
-
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
-
-            <RiCloseCircleLine className="text-xl" />
-
-            Rejected Jobs
-
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
-
-            <RiBarChartBoxLine className="text-xl" />
-
-            Reports
-
-          </button>
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50">
-
-            <RiSettings3Line className="text-xl" />
-
-            Settings
-
-          </button>
-
-        </nav>
-
-        <div className="p-4 border-t border-gray-100">
-
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50">
-
-            <RiLogoutBoxLine className="text-xl" />
-
-            Logout
-
-          </button>
-
-        </div>
-
-      </aside>
-
-      {/* ================= MAIN ================= */}
-
-      <main className="w-full lg:ml-64">
-
-        {/* HEADER */}
-
-        <header className="h-20 bg-white border-b border-gray-200 px-5 sm:px-8 flex items-center justify-between">
-
-          <div>
-
-            <h2 className="text-xl sm:text-2xl font-bold text-secondary">
-              Admin Dashboard
-            </h2>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Manage employee job requests
-            </p>
-
-          </div>
-
-          {/* RIGHT SIDE */}
-
-          <div className="flex items-center gap-4">
-
-            {/* NOTIFICATION */}
-
-            <button
-              type="button"
-              onClick={() => navigate("/notifications")}
-              className="relative w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200"
-            >
-
-              <RiNotification3Line className="text-xl" />
-
-              {pendingCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
-                  {pendingCount}
-                </span>
-              )}
-
-            </button>
-
-            {/* ADMIN PROFILE */}
-
-            <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
-
-              <RiUserLine className="text-xl" />
-
-            </div>
-
-          </div>
-
-        </header>
-
-        {/* CONTENT */}
-
-        <div className="p-5 sm:p-8">
-
-          {/* SUMMARY CARDS */}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-
-            {/* TOTAL EMPLOYEES */}
-
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-gray-500">
-                    Total Employees
-                  </p>
-
-                  <h3 className="text-3xl font-bold text-secondary mt-2">
-                    {totalEmployees}
-                  </h3>
-
-                </div>
-
-                <div className="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
-
-                  <RiTeamLine className="text-2xl" />
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* ACCEPTED */}
-
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-gray-500">
-                    Accepted Jobs
-                  </p>
-
-                  <h3 className="text-3xl font-bold text-secondary mt-2">
-                    {acceptedJobs}
-                  </h3>
-
-                </div>
-
-                <div className="w-12 h-12 rounded-xl bg-green-50 text-green-500 flex items-center justify-center">
-
-                  <RiCheckboxCircleLine className="text-2xl" />
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* REJECTED */}
-
-            <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <p className="text-sm text-gray-500">
-                    Rejected Jobs
-                  </p>
-
-                  <h3 className="text-3xl font-bold text-secondary mt-2">
-                    {rejectedJobs}
-                  </h3>
-
-                </div>
-
-                <div className="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
-
-                  <RiCloseCircleLine className="text-2xl" />
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* JOB REQUESTS */}
-
-          <div className="mt-8">
-
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
-
-              <div>
-
-                <h2 className="text-xl font-bold text-secondary">
-                  Job Requests
-                </h2>
-
-                <p className="text-sm text-gray-500 mt-1">
-                  Review employee submitted jobs
-                </p>
-
-              </div>
-
-              {/* SEARCH */}
-
-              <div className="relative w-full lg:w-80">
-
-                <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
-
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
-                  }
-                  placeholder="Search employee or task..."
-                  className="w-full h-11 pl-10 pr-4 border border-gray-200 rounded-xl bg-white text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-                />
-
-              </div>
-
-            </div>
-
-            {/* FILTER */}
-
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-5">
-
-              {[
-                "All",
-                "Accepted",
-                "Rejected",
-              ].map((item) => (
-
-                <button
-                  key={item}
-                  onClick={() => setFilter(item)}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${
-                    filter === item
-                      ? "bg-primary text-white"
-                      : "bg-white border border-gray-200 text-gray-600 hover:border-primary"
-                  }`}
-                >
-                  {item}
-                </button>
-
-              ))}
-
-            </div>
-
-            {/* JOB CARDS */}
-
-            {filteredJobs.length === 0 ? (
-
-              <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
-
-                <RiFileList3Line className="text-5xl text-gray-300 mx-auto" />
-
-                <h3 className="font-semibold text-gray-700 mt-4">
-                  No Job Requests Found
-                </h3>
-
-                <p className="text-sm text-gray-400 mt-1">
-                  No jobs match your search or filter.
-                </p>
-
-              </div>
-
-            ) : (
-
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-                {filteredJobs.map((job) => (
-
-                  <div
-                    key={job.id}
-                    onClick={() => {
-                      setSelectedJob(job);
-                      setShowRejectBox(false);
-                      setRejectReason("");
-                    }}
-                    className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-lg hover:border-primary/30 transition cursor-pointer"
-                  >
-
-                    {/* CARD HEADER */}
-
-                    <div className="flex items-start justify-between gap-3">
-
-                      <div>
-
-                        <div className="flex items-center gap-2">
-
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 text-primary flex items-center justify-center">
-
-                            <RiUserLine className="text-xl" />
-
-                          </div>
-
-                          <div>
-
-                            <p className="font-bold text-secondary">
-                              {job.employeeId}
+                            <p className="text-primary font-semibold text-xs">
+                                ADMIN DASHBOARD
                             </p>
 
-                            <p className="text-xs text-gray-500">
-                              {job.employeeName}
-                            </p>
+                            <h1 className="text-3xl font-extrabold text-secondary mt-1">
+                                Job Management
+                            </h1>
 
-                          </div>
+                            <p className="text-gray-600 text-sm mt-2">
+                                Create jobs, assign employees and manage
+                                approval requests.
+                            </p>
 
                         </div>
 
-                      </div>
+                        {/* NOTIFICATION */}
 
-                      <span
-                        className={`px-3 py-1.5 rounded-full border text-xs font-semibold ${getStatusStyle(
-                          job.status
-                        )}`}
-                      >
-                        {job.status}
-                      </span>
+                        <div className="relative">
 
-                    </div>
+                            <div className="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center text-2xl">
+                                <RiNotification3Line />
+                            </div>
 
-                    {/* TASK */}
+                            {pendingRequests.length > 0 && (
+                                <span className="absolute -top-2 -right-2 min-w-6 h-6 px-1 bg-red-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                    {pendingRequests.length}
+                                </span>
+                            )}
 
-                    <div className="mt-5">
-
-                      <h3 className="text-lg font-bold text-secondary">
-                        {job.task}
-                      </h3>
+                        </div>
 
                     </div>
-
-                    {/* VIEW DETAILS */}
-
-                    <div className="border-t border-gray-100 mt-4 pt-4 flex items-center justify-end">
-
-                      <div className="flex items-center gap-1 text-primary text-sm font-semibold">
-
-                        View Details
-
-                        <RiArrowRightLine />
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-            )}
-
-          </div>
-
-        </div>
-
-      </main>
-
-      {/* ================= JOB DETAILS MODAL ================= */}
-
-      {selectedJob && (
-
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl">
-
-            {/* MODAL HEADER */}
-
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-5 flex items-center justify-between">
-
-              <div>
-
-                <h2 className="text-xl font-bold text-secondary">
-                  Job Details
-                </h2>
-
-                <p className="text-sm text-gray-500 mt-1">
-                  Review employee job request
-                </p>
-
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedJob(null);
-
-                  navigate("/admin", {
-                    replace: true,
-                    state: {},
-                  });
-                }}
-                className="w-9 h-9 rounded-lg hover:bg-gray-100 text-gray-500 flex items-center justify-center"
-              >
-
-                <RiCloseLine className="text-xl" />
-
-              </button>
-
-            </div>
-
-            {/* MODAL CONTENT */}
-
-            <div className="p-6">
-
-              {/* EMPLOYEE DETAILS */}
-
-              <div className="bg-gray-50 rounded-xl p-4">
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                  <div>
-
-                    <p className="text-xs text-gray-400">
-                      Employee ID
-                    </p>
-
-                    <p className="font-semibold text-secondary mt-1">
-                      {selectedJob.employeeId}
-                    </p>
-
-                  </div>
-
-                  <div>
-
-                    <p className="text-xs text-gray-400">
-                      Employee Name
-                    </p>
-
-                    <p className="font-semibold text-secondary mt-1">
-                      {selectedJob.employeeName}
-                    </p>
-
-                  </div>
-
-                  <div>
-
-                    <p className="text-xs text-gray-400">
-                      Submitted Date
-                    </p>
-
-                    <p className="font-semibold text-secondary mt-1">
-                      {selectedJob.submittedDate}
-                    </p>
-
-                  </div>
-
-                  <div>
-
-                    <p className="text-xs text-gray-400">
-                      Status
-                    </p>
-
-                    <span
-                      className={`inline-block mt-1 px-3 py-1 rounded-full border text-xs font-semibold ${getStatusStyle(
-                        selectedJob.status
-                      )}`}
-                    >
-                      {selectedJob.status}
-                    </span>
-
-                  </div>
 
                 </div>
 
-              </div>
+            </section>
 
-              {/* TASK DETAILS */}
+            {/* ================= CONTENT ================= */}
 
-              <div className="mt-6">
+            <section className="max-w-6xl mx-auto px-5 py-8">
 
-                <h3 className="text-lg font-bold text-secondary">
-                  {selectedJob.task}
-                </h3>
+                {/* ================= CREATE BUTTON ================= */}
 
-                <p className="text-sm text-gray-500 mt-2 leading-6">
-                  {selectedJob.description}
-                </p>
-
-              </div>
-
-              {/* HOURS */}
-
-              <div className="mt-5">
-
-                <h3 className="font-semibold text-secondary mb-3">
-                  Task Estimation
-                </h3>
-
-                <div className="border border-gray-200 rounded-xl overflow-hidden">
-
-                  {selectedJob.tasks &&
-                    selectedJob.tasks.map(
-                      (task) => (
-
-                        <div
-                          key={task.name}
-                          className="flex items-center justify-between px-4 py-3 border-b last:border-b-0 border-gray-100"
+                {!showCreateJob &&
+                    !selectedRequest && (
+                        <button
+                            onClick={() =>
+                                setShowCreateJob(
+                                    true
+                                )
+                            }
+                            className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-lg font-semibold text-sm hover:opacity-90 transition"
                         >
+                            <RiAddLine />
 
-                          <span className="text-sm text-gray-600">
-                            {task.name}
-                          </span>
-
-                          <span className="text-sm font-semibold text-secondary">
-                            {task.hours} hours
-                          </span>
-
-                        </div>
-
-                      )
+                            Create Job
+                        </button>
                     )}
 
-                  <div className="flex items-center justify-between px-4 py-4 bg-gray-50">
+                {/* =====================================================
+                    CREATE JOB
+                ===================================================== */}
 
-                    <span className="font-semibold text-secondary">
-                      Total
-                    </span>
+                {showCreateJob && (
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
 
-                    <span className="font-bold text-primary">
-                      {selectedJob.totalHours} hours
-                    </span>
+                        <div className="flex items-center justify-between mb-6">
 
-                  </div>
+                            <div>
 
-                </div>
+                                <h2 className="text-xl font-bold text-secondary">
+                                    Create Job
+                                </h2>
 
-              </div>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    Create and assign a new job.
+                                </p>
 
-              {/* REJECTION REASON */}
+                            </div>
 
-              {selectedJob.status === "Rejected" &&
-                selectedJob.rejectionReason && (
+                            <button
+                                onClick={() => {
+                                    setShowCreateJob(
+                                        false
+                                    );
+                                    resetForm();
+                                }}
+                                className="text-gray-500 hover:text-red-500"
+                            >
+                                <RiCloseLine className="text-2xl" />
+                            </button>
 
-                  <div className="mt-5 bg-red-50 border border-red-100 rounded-xl p-4">
+                        </div>
 
-                    <p className="text-sm font-semibold text-red-600">
-                      Rejection Reason
-                    </p>
+                        <form
+                            onSubmit={
+                                handleCreateJob
+                            }
+                        >
 
-                    <p className="text-sm text-red-500 mt-1">
-                      {selectedJob.rejectionReason}
-                    </p>
+                            {/* ================= BASIC DETAILS ================= */}
 
-                  </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
+                                {/* JOB TITLE */}
+
+                                <div>
+
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Job Title
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="jobTitle"
+                                        value={
+                                            formData.jobTitle
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        placeholder="Enter job title"
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary"
+                                    />
+
+                                </div>
+
+                                {/* DEADLINE */}
+
+                                <div>
+
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Deadline
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        name="deadline"
+                                        value={
+                                            formData.deadline
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary"
+                                    />
+
+                                </div>
+
+                                {/* JOB TYPE */}
+
+                                <div>
+
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Job Type
+                                    </label>
+
+                                    <select
+                                        name="jobType"
+                                        value={
+                                            formData.jobType
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary"
+                                    >
+
+                                        <option value="Full Time">
+                                            Full Time
+                                        </option>
+
+                                        <option value="Part Time">
+                                            Part Time
+                                        </option>
+
+                                        <option value="Internship">
+                                            Internship
+                                        </option>
+
+                                        <option value="Contract">
+                                            Contract
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                {/* ================= JOB ASSIGN ================= */}
+
+                                <div>
+
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Job Assign
+                                    </label>
+
+                                    <select
+                                        name="employeeId"
+                                        value={
+                                            formData.employeeId
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary"
+                                    >
+
+                                        <option value="">
+                                            Select Employee
+                                        </option>
+
+                                        <option value="EMP001">
+                                            EMP001
+                                        </option>
+
+                                        <option value="EMP002">
+                                            EMP002
+                                        </option>
+
+                                        <option value="EMP003">
+                                            EMP003
+                                        </option>
+
+                                        <option value="EMP004">
+                                            EMP004
+                                        </option>
+
+                                        <option value="EMP005">
+                                            EMP005
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                            {/* ================= DESCRIPTION ================= */}
+
+                            <div className="mt-5">
+
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Description
+                                </label>
+
+                                <textarea
+                                    name="description"
+                                    value={
+                                        formData.description
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    rows="4"
+                                    placeholder="Enter job description"
+                                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary resize-none"
+                                />
+
+                            </div>
+
+                            {/* ================= SUBTASKS ================= */}
+
+                            <div className="mt-6">
+
+                                <div className="flex items-center justify-between mb-4">
+
+                                    <div>
+
+                                        <h3 className="font-bold text-secondary">
+                                            Sub Tasks
+                                        </h3>
+
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Add tasks and required hours.
+                                        </p>
+
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            addSubtask
+                                        }
+                                        className="flex items-center gap-2 bg-blue-50 text-primary px-4 py-2 rounded-lg text-sm font-semibold"
+                                    >
+                                        <RiAddLine />
+
+                                        Add Sub Task
+                                    </button>
+
+                                </div>
+
+                                <div className="space-y-3">
+
+                                    {subtasks.map(
+                                        (
+                                            task,
+                                            index
+                                        ) => (
+                                            <div
+                                                key={
+                                                    task.id
+                                                }
+                                                className="grid grid-cols-1 md:grid-cols-[1fr_180px_45px] gap-3"
+                                            >
+
+                                                <input
+                                                    type="text"
+                                                    value={
+                                                        task.name
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        handleSubtaskChange(
+                                                            index,
+                                                            "name",
+                                                            e
+                                                                .target
+                                                                .value
+                                                        )
+                                                    }
+                                                    placeholder={`Sub Task ${
+                                                        index +
+                                                        1
+                                                    }`}
+                                                    className="border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary"
+                                                />
+
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.5"
+                                                    value={
+                                                        task.requiredHours
+                                                    }
+                                                    onChange={(
+                                                        e
+                                                    ) =>
+                                                        handleSubtaskChange(
+                                                            index,
+                                                            "requiredHours",
+                                                            e
+                                                                .target
+                                                                .value
+                                                        )
+                                                    }
+                                                    placeholder="Required Hours"
+                                                    className="border border-gray-300 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary"
+                                                />
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        deleteSubtask(
+                                                            index
+                                                        )
+                                                    }
+                                                    className="w-10 h-10 bg-red-50 text-red-500 rounded-lg flex items-center justify-center"
+                                                >
+                                                    <RiDeleteBinLine />
+                                                </button>
+
+                                            </div>
+                                        )
+                                    )}
+
+                                </div>
+
+                            </div>
+
+                            {/* ================= CREATE ================= */}
+
+                            <button
+                                type="submit"
+                                className="w-full mt-6 bg-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
+                            >
+                                Create Job
+                            </button>
+
+                        </form>
+
+                    </div>
                 )}
 
-              {/* REJECT INPUT */}
+                {/* =====================================================
+                    APPROVAL REQUEST
+                ===================================================== */}
 
-              {showRejectBox && (
+                {selectedRequest && (
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
 
-                <div className="mt-5">
+                        <button
+                            onClick={() =>
+                                setSelectedRequest(
+                                    null
+                                )
+                            }
+                            className="flex items-center gap-2 text-primary font-semibold text-sm mb-5"
+                        >
+                            ← Back to Jobs
+                        </button>
 
-                  <label className="block text-sm font-semibold text-secondary mb-2">
-                    Rejection Reason
-                  </label>
+                        <div className="flex items-center justify-between">
 
-                  <textarea
-                    value={rejectReason}
-                    onChange={(e) =>
-                      setRejectReason(
-                        e.target.value
-                      )
-                    }
-                    rows="4"
-                    placeholder="Enter reason for rejecting this job..."
-                    className="w-full border border-gray-200 rounded-xl p-3 text-sm outline-none resize-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                  />
+                            <div>
 
-                  {rejectReason.trim() === "" && (
+                                <p className="text-primary text-xs font-semibold">
+                                    APPROVAL REQUEST
+                                </p>
 
-                    <p className="text-xs text-red-500 mt-1">
-                      Please enter a rejection reason
-                    </p>
+                                <h2 className="text-2xl font-bold text-secondary mt-1">
+                                    {
+                                        selectedRequest.jobTitle
+                                    }
+                                </h2>
 
-                  )}
+                            </div>
 
-                </div>
+                            <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-xs font-bold">
+                                {
+                                    selectedRequest.status
+                                }
+                            </span>
 
-              )}
+                        </div>
 
-              {/* ACTION BUTTONS */}
+                        {/* DETAILS */}
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
 
-                {selectedJob.status === "Pending" ? (
+                            <div className="bg-gray-50 rounded-lg p-4">
 
-                  <>
+                                <div className="flex items-center gap-2 text-primary">
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowRejectBox(true);
-                      }}
-                      className="flex-1 h-11 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 font-semibold text-sm flex items-center justify-center gap-2"
-                    >
+                                    <RiUserLine />
 
-                      <RiCloseCircleLine />
+                                    <p className="text-xs text-gray-500">
+                                        Employee
+                                    </p>
 
-                      Reject
+                                </div>
 
-                    </button>
+                                <p className="font-semibold mt-1">
+                                    {
+                                        selectedRequest.employeeName
+                                    }
+                                </p>
 
-                    <button
-                      type="button"
-                      onClick={handleAccept}
-                      className="flex-1 h-11 rounded-xl bg-primary hover:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2"
-                    >
+                            </div>
 
-                      <RiCheckLine />
+                            <div className="bg-gray-50 rounded-lg p-4">
 
-                      Accept
+                                <div className="flex items-center gap-2 text-primary">
 
-                    </button>
+                                    <RiBriefcaseLine />
 
-                  </>
+                                    <p className="text-xs text-gray-500">
+                                        Job
+                                    </p>
 
-                ) : selectedJob.status === "Rejected" ? (
+                                </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedJob(null);
+                                <p className="font-semibold mt-1">
+                                    {
+                                        selectedRequest.jobTitle
+                                    }
+                                </p>
 
-                      navigate("/admin", {
-                        replace: true,
-                        state: {},
-                      });
-                    }}
-                    className="w-full h-11 rounded-xl bg-gray-100 text-gray-700 font-semibold text-sm"
-                  >
-                    Close
-                  </button>
+                            </div>
 
-                ) : (
+                            <div className="bg-gray-50 rounded-lg p-4">
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedJob(null);
+                                <div className="flex items-center gap-2 text-primary">
 
-                      navigate("/admin", {
-                        replace: true,
-                        state: {},
-                      });
-                    }}
-                    className="w-full h-11 rounded-xl bg-green-50 text-green-600 font-semibold text-sm flex items-center justify-center gap-2"
-                  >
+                                    <RiCalendarLine />
 
-                    <RiCheckLine />
+                                    <p className="text-xs text-gray-500">
+                                        Deadline
+                                    </p>
 
-                    Job Accepted
+                                </div>
 
-                  </button>
+                                <p className="font-semibold mt-1">
+                                    {
+                                        selectedRequest.deadline
+                                    }
+                                </p>
 
+                            </div>
+
+                            <div className="bg-gray-50 rounded-lg p-4">
+
+                                <div className="flex items-center gap-2 text-primary">
+
+                                    <RiTimeLine />
+
+                                    <p className="text-xs text-gray-500">
+                                        Total Hours
+                                    </p>
+
+                                </div>
+
+                                <p className="font-semibold text-primary mt-1">
+                                    {
+                                        selectedRequest.totalHours
+                                    }{" "}
+                                    hours
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        {/* SUBTASK TABLE */}
+
+                        <div className="mt-6">
+
+                            <h3 className="font-bold text-secondary mb-3">
+                                Employee Estimated Hours
+                            </h3>
+
+                            <div className="overflow-x-auto">
+
+                                <table className="w-full border-collapse text-sm">
+
+                                    <thead>
+
+                                        <tr className="bg-blue-50">
+
+                                            <th className="p-3 border text-left">
+                                                #
+                                            </th>
+
+                                            <th className="p-3 border text-left">
+                                                Sub Task
+                                            </th>
+
+                                            <th className="p-3 border text-left">
+                                                Required
+                                            </th>
+
+                                            <th className="p-3 border text-left">
+                                                Employee Hours
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {selectedRequest.subtasks?.map(
+                                            (
+                                                task,
+                                                index
+                                            ) => (
+                                                <tr
+                                                    key={
+                                                        task.id
+                                                    }
+                                                >
+
+                                                    <td className="p-3 border">
+                                                        {
+                                                            index +
+                                                            1
+                                                        }
+                                                    </td>
+
+                                                    <td className="p-3 border font-semibold">
+                                                        {
+                                                            task.name
+                                                        }
+                                                    </td>
+
+                                                    <td className="p-3 border">
+                                                        {(() => {
+                                                            const job =
+                                                                jobs.find(
+                                                                    (
+                                                                        item
+                                                                    ) =>
+                                                                        String(
+                                                                            item.id
+                                                                        ) ===
+                                                                        String(
+                                                                            selectedRequest.jobId
+                                                                        )
+                                                                );
+
+                                                            const originalTask =
+                                                                job?.subtasks?.find(
+                                                                    (
+                                                                        item
+                                                                    ) =>
+                                                                        String(
+                                                                            item.id
+                                                                        ) ===
+                                                                        String(
+                                                                            task.id
+                                                                        )
+                                                                );
+
+                                                            return (
+                                                                originalTask?.requiredHours ||
+                                                                "-"
+                                                            );
+                                                        })()}{" "}
+                                                        hrs
+                                                    </td>
+
+                                                    <td className="p-3 border font-bold text-primary">
+                                                        {
+                                                            task.estimatedHours
+                                                        }{" "}
+                                                        hrs
+                                                    </td>
+
+                                                </tr>
+                                            )
+                                        )}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                        {/* ACCEPT / REJECT */}
+
+                        {selectedRequest.status ===
+                            "Pending" && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+
+                                <button
+                                    onClick={() =>
+                                        handleAccept(
+                                            selectedRequest
+                                        )
+                                    }
+                                    className="flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-lg font-semibold"
+                                >
+                                    <RiCheckLine />
+
+                                    Accept
+                                </button>
+
+                                <button
+                                    onClick={() =>
+                                        handleReject(
+                                            selectedRequest
+                                        )
+                                    }
+                                    className="flex items-center justify-center gap-2 bg-red-600 text-white py-3 rounded-lg font-semibold"
+                                >
+                                    <RiCloseLine />
+
+                                    Reject
+                                </button>
+
+                            </div>
+                        )}
+
+                    </div>
                 )}
 
-              </div>
+                {/* =====================================================
+                    JOB TABLE
+                ===================================================== */}
 
-              {/* CONFIRM REJECT */}
+                {!showCreateJob &&
+                    !selectedRequest && (
+                    <div className="mt-6 bg-white border border-gray-200 rounded-xl overflow-hidden">
 
-              {showRejectBox && (
+                        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
 
-                <button
-                  type="button"
-                  onClick={handleReject}
-                  disabled={
-                    rejectReason.trim() === ""
-                  }
-                  className={`w-full h-11 mt-3 rounded-xl font-semibold text-sm transition ${
-                    rejectReason.trim() === ""
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-red-500 hover:bg-red-600 text-white"
-                  }`}
-                >
-                  Confirm Rejection
-                </button>
+                            <div>
 
-              )}
+                                <h2 className="text-xl font-bold text-secondary">
+                                    Created Jobs
+                                </h2>
 
-            </div>
+                                <p className="text-gray-500 text-sm mt-1">
+                                    All jobs created and assigned by admin.
+                                </p>
 
-          </div>
+                            </div>
 
-        </div>
+                            {pendingRequests.length >
+                                0 && (
+                                <span className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-bold">
+                                    {
+                                        pendingRequests.length
+                                    }{" "}
+                                    Pending
+                                </span>
+                            )}
 
-      )}
+                        </div>
 
-    </div>
-  );
+                        {jobs.length === 0 ? (
+                            <div className="p-10 text-center">
+
+                                <RiBriefcaseLine className="text-5xl text-gray-300 mx-auto" />
+
+                                <p className="text-gray-500 text-sm mt-3">
+                                    No jobs created yet.
+                                </p>
+
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+
+                                <table className="w-full border-collapse text-sm">
+
+                                    <thead>
+
+                                        <tr className="bg-gray-50">
+
+                                            <th className="p-4 border text-left">
+                                                Job
+                                            </th>
+
+                                            <th className="p-4 border text-left">
+                                                Assigned To
+                                            </th>
+
+                                            <th className="p-4 border text-left">
+                                                Deadline
+                                            </th>
+
+                                            <th className="p-4 border text-left">
+                                                Status
+                                            </th>
+
+                                            <th className="p-4 border text-center">
+                                                Action
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody>
+
+                                        {jobs.map(
+                                            (job) => (
+                                                <tr
+                                                    key={
+                                                        job.id
+                                                    }
+                                                >
+
+                                                    <td className="p-4 border">
+
+                                                        <p className="font-bold text-secondary">
+                                                            {
+                                                                job.jobTitle
+                                                            }
+                                                        </p>
+
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            {
+                                                                job.jobType
+                                                            }
+                                                        </p>
+
+                                                    </td>
+
+                                                    <td className="p-4 border">
+
+                                                        <p className="font-semibold">
+                                                            {
+                                                                job
+                                                                    ?.assignedTo
+                                                                    ?.employeeName
+                                                            }
+                                                        </p>
+
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            {
+                                                                job
+                                                                    ?.assignedTo
+                                                                    ?.employeeId
+                                                            }
+                                                        </p>
+
+                                                    </td>
+
+                                                    <td className="p-4 border">
+                                                        {
+                                                            job.deadline
+                                                        }
+                                                    </td>
+
+                                                    <td className="p-4 border">
+
+                                                        <span
+                                                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                                job.status ===
+                                                                "Accepted"
+                                                                    ? "bg-green-100 text-green-700"
+                                                                    : job.status ===
+                                                                      "Rejected"
+                                                                    ? "bg-red-100 text-red-700"
+                                                                    : job.status ===
+                                                                      "Pending Approval"
+                                                                    ? "bg-yellow-100 text-yellow-700"
+                                                                    : "bg-blue-100 text-blue-700"
+                                                            }`}
+                                                        >
+                                                            {
+                                                                job.status
+                                                            }
+                                                        </span>
+
+                                                    </td>
+
+                                                    <td className="p-4 border">
+
+                                                        <div className="flex justify-center gap-2">
+
+                                                            {/* VIEW REQUEST */}
+
+                                                            <button
+                                                                onClick={() => {
+
+                                                                    const request =
+                                                                        requests.find(
+                                                                            (
+                                                                                item
+                                                                            ) =>
+                                                                                String(
+                                                                                    item.jobId
+                                                                                ) ===
+                                                                                    String(
+                                                                                        job.id
+                                                                                    ) &&
+                                                                                item.status ===
+                                                                                    "Pending"
+                                                                        );
+
+                                                                    if (
+                                                                        request
+                                                                    ) {
+                                                                        setSelectedRequest(
+                                                                            request
+                                                                        );
+                                                                    } else {
+                                                                        alert(
+                                                                            "No pending request for this job."
+                                                                        );
+                                                                    }
+                                                                }}
+                                                                className="w-9 h-9 bg-blue-50 text-primary rounded-lg flex items-center justify-center"
+                                                            >
+                                                                <RiEyeLine />
+                                                            </button>
+
+                                                            {/* DELETE */}
+
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleDeleteJob(
+                                                                        job.id
+                                                                    )
+                                                                }
+                                                                className="w-9 h-9 bg-red-50 text-red-500 rounded-lg flex items-center justify-center"
+                                                            >
+                                                                <RiDeleteBinLine />
+                                                            </button>
+
+                                                        </div>
+
+                                                    </td>
+
+                                                </tr>
+                                            )
+                                        )}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+                        )}
+
+                    </div>
+                )}
+
+                {/* =====================================================
+                    NOTIFICATIONS
+                ===================================================== */}
+
+                {!showCreateJob &&
+                    !selectedRequest &&
+                    pendingRequests.length >
+                        0 && (
+                        <div className="mt-6 bg-white border border-gray-200 rounded-xl overflow-hidden">
+
+                            <div className="p-5 border-b border-gray-200">
+
+                                <div className="flex items-center gap-2">
+
+                                    <RiNotification3Line className="text-primary text-xl" />
+
+                                    <h2 className="text-xl font-bold text-secondary">
+                                        Approval Notifications
+                                    </h2>
+
+                                </div>
+
+                                <p className="text-gray-500 text-sm mt-1">
+                                    Employees who submitted their estimated
+                                    working hours.
+                                </p>
+
+                            </div>
+
+                            <div className="divide-y">
+
+                                {pendingRequests.map(
+                                    (
+                                        request
+                                    ) => (
+                                        <div
+                                            key={
+                                                request.id
+                                            }
+                                            className="p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                                        >
+
+                                            <div>
+
+                                                <h3 className="font-bold text-secondary">
+                                                    {
+                                                        request.jobTitle
+                                                    }
+                                                </h3>
+
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    {
+                                                        request.employeeName
+                                                    }{" "}
+                                                    submitted{" "}
+                                                    <strong>
+                                                        {
+                                                            request.totalHours
+                                                        }{" "}
+                                                        hours
+                                                    </strong>
+                                                    .
+                                                </p>
+
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    Submitted:{" "}
+                                                    {
+                                                        request.submittedDate
+                                                    }
+                                                </p>
+
+                                            </div>
+
+                                            <button
+                                                onClick={() =>
+                                                    setSelectedRequest(
+                                                        request
+                                                    )
+                                                }
+                                                className="bg-primary text-white px-5 py-2.5 rounded-lg text-sm font-semibold"
+                                            >
+                                                Review Request
+                                            </button>
+
+                                        </div>
+                                    )
+                                )}
+
+                            </div>
+
+                        </div>
+                    )}
+
+            </section>
+
+        </main>
+    );
 };
 
-export default AdminPage;
+export default Admin;
