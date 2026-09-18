@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { RiMailLine, RiLockPasswordLine, RiEyeLine, RiEyeOffLine, RiArrowRightLine, RiShieldCheckLine,} from "react-icons/ri";
+import {
+  RiMailLine,
+  RiLockPasswordLine,
+  RiEyeLine,
+  RiEyeOffLine,
+  RiArrowRightLine,
+  RiShieldCheckLine,
+} from "react-icons/ri";
 import logo from "../../Assests/logo.png";
-import { useContext } from "react";
 import { AuthContext } from "../../AuthContext";
 
 const Login = () => {
-  const {checkAuth} = useContext(AuthContext);
+  const { checkAuth } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +23,10 @@ const Login = () => {
     remember: false,
   });
 
+  // ===============================
+  // HANDLE INPUT CHANGE
+  // ===============================
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -26,58 +36,159 @@ const Login = () => {
     });
   };
 
+  // ===============================
+  // LOGIN
+  // ===============================
+
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const response = await fetch("http://localhost:5000/login", {
-      method: "POST",
-      credentials:"include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.email,
-        password: formData.password,
-      }),
-    });
+    try {
+      const response = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    console.log(data);
+      // ===============================
+      // DEBUG LOGIN RESPONSE
+      // ===============================
 
-    if (!data.success) {
-      alert(data.message);
-      return;
+      console.log("================================");
+      console.log("LOGIN RESPONSE:", data);
+      console.log("USER:", data.user);
+      console.log("ID:", data.user?.Id);
+      console.log("EMPLOYEE ID:", data.user?.employeeId);
+      console.log("ROLE:", data.user?.role);
+      console.log("================================");
+
+      // ===============================
+      // LOGIN FAILED
+      // ===============================
+
+      if (!data.success) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // ===============================
+      // CHECK USER DATA
+      // ===============================
+
+      if (!data.user) {
+        alert("User data not found");
+        return;
+      }
+
+      // ===============================
+      // SAVE USER
+      // ===============================
+
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify(data.user)
+      );
+
+      // ===============================
+      // GET USER ID
+      // ===============================
+
+      const userId =
+        data.user.Id ||
+        data.user.employeeId;
+
+      if (!userId) {
+        alert("User ID not found");
+        return;
+      }
+
+      const Id = userId
+        .toString()
+        .trim()
+        .toUpperCase();
+
+      console.log("FINAL USER ID:", Id);
+
+      // ===============================
+      // AUTH CHECK
+      // ===============================
+
+      if (typeof checkAuth === "function") {
+        await checkAuth();
+      }
+
+      // ===============================
+      // SUCCESS MESSAGE
+      // ===============================
+
+      alert("Login successful!");
+
+      // ===============================
+      // ID BASED ROUTING
+      // ===============================
+
+      if (Id.startsWith("EMP")) {
+        console.log("Employee Login");
+        navigate("/employee");
+        return;
+      }
+
+      if (Id.startsWith("ADM")) {
+        console.log("Admin Login");
+        navigate("/admin");
+        return;
+      }
+
+      // ===============================
+      // ROLE BASED FALLBACK
+      // ===============================
+
+      if (data.user.role === "employee") {
+        console.log("Employee Role Login");
+        navigate("/employee");
+        return;
+      }
+
+      if (data.user.role === "admin") {
+        console.log("Admin Role Login");
+        navigate("/admin");
+        return;
+      }
+
+      // ===============================
+      // INVALID ID / ROLE
+      // ===============================
+
+      alert(
+        `Invalid User ID or Role\n\nID: ${Id}\nRole: ${
+          data.user.role || "Not found"
+        }`
+      );
+    } catch (error) {
+      console.log("Login error:", error);
+      alert("Unable to connect to server");
     }
+  };
 
-    localStorage.setItem("currentUser",JSON.stringify(data.user));
+  // ===============================
+  // CREATE ACCOUNT
+  // ===============================
 
-    await checkAuth();
+  const handleaccount = () => {
+    navigate("/create-account");
+  };
 
-    alert("Login successful!");
-
-
-
-    if(data.user.role === "employee")
-    {
-      navigate("/employee");
-
-    }
-    else if(data.user.role === "admin")
-    {
-      navigate("/admin")
-    }
-    
-  } catch (error) {
-    console.log("Login error:", error);
-    alert("Unable to connect to server");
-  }
-};
-
-const handleaccount = () => {
-  navigate("/create-account");
-}
+  // ===============================
+  // UI
+  // ===============================
 
   return (
     <section className="min-h-[calc(100vh-94px)] bg-gray-50 px-4 py-6 sm:px-6 sm:py-10 flex items-center justify-center">
@@ -85,9 +196,11 @@ const handleaccount = () => {
       <div className="w-full max-w-6xl bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-2">
 
         {/* ================= LEFT SIDE ================= */}
+
         <div className="hidden lg:flex bg-primary text-white p-10 xl:p-14 relative overflow-hidden items-center">
 
           {/* Background Circle */}
+
           <div className="absolute -top-30 -left-32 w-80 h-80 rounded-full bg-white/10" />
 
           <div className="absolute -bottom-40 -right-32 w-96 h-96 rounded-full bg-white/10" />
@@ -101,26 +214,35 @@ const handleaccount = () => {
             />
 
             <h1 className="text-4xl xl:text-5xl font-bold leading-tight mt-2">
+
               Connect.
               <br />
+
               Collaborate.
               <br />
+
               Grow.
+
             </h1>
 
             <p className="mt-6 text-blue-100 text-base xl:text-lg leading-relaxed max-w-md">
+
               Manage your teams, projects and communication
               from one powerful platform built for modern
               organizations.
+
             </p>
 
             <div className="mt-10 flex items-center gap-3">
 
               <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center">
+
                 <RiShieldCheckLine className="text-2xl" />
+
               </div>
 
               <div>
+
                 <p className="font-semibold">
                   Secure & Reliable
                 </p>
@@ -128,19 +250,23 @@ const handleaccount = () => {
                 <p className="text-sm text-blue-100">
                   Your data is protected
                 </p>
+
               </div>
 
             </div>
 
           </div>
+
         </div>
 
         {/* ================= RIGHT SIDE ================= */}
+
         <div className="w-full p-5 sm:p-8 md:p-10 lg:p-12">
 
           <div className="w-full max-w-md mx-auto">
 
             {/* Mobile Logo */}
+
             <div className="flex justify-center lg:hidden mb-6 sm:mb-8">
 
               <img
@@ -152,31 +278,45 @@ const handleaccount = () => {
             </div>
 
             {/* Heading */}
+
             <div className="mb-6 sm:mb-8">
 
               <h2 className="text-2xl sm:text-3xl font-bold text-secondary">
+
                 Welcome Back
+
               </h2>
 
               <p className="text-sm sm:text-base text-gray-500 mt-2">
+
                 Login to your TechNova account
+
               </p>
 
             </div>
 
             {/* ================= FORM ================= */}
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 sm:space-y-5"
+            >
 
               {/* Email */}
+
               <div>
 
                 <label className="block text-sm font-semibold text-secondary mb-2">
+
                   Work Email
+
                 </label>
 
                 <div className="relative">
 
-                  <RiMailLine className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl text-gray-400" />
+                  <RiMailLine
+                    className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl text-gray-400"
+                  />
 
                   <input
                     type="email"
@@ -193,12 +333,15 @@ const handleaccount = () => {
               </div>
 
               {/* Password */}
+
               <div>
 
                 <div className="flex items-center justify-between mb-2">
 
                   <label className="text-sm font-semibold text-secondary">
+
                     Password
+
                   </label>
 
                   <button
@@ -206,14 +349,18 @@ const handleaccount = () => {
                     onClick={() => navigate("/forgot-password")}
                     className="text-xs sm:text-sm text-primary font-medium hover:underline"
                   >
+
                     Forgot Password?
+
                   </button>
 
                 </div>
 
                 <div className="relative">
 
-                  <RiLockPasswordLine className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl text-gray-400" />
+                  <RiLockPasswordLine
+                    className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl text-gray-400"
+                  />
 
                   <input
                     type={showPassword ? "text" : "password"}
@@ -227,14 +374,18 @@ const handleaccount = () => {
 
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
                     className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl text-gray-400 hover:text-primary"
                   >
+
                     {showPassword ? (
                       <RiEyeOffLine />
                     ) : (
                       <RiEyeLine />
                     )}
+
                   </button>
 
                 </div>
@@ -242,6 +393,7 @@ const handleaccount = () => {
               </div>
 
               {/* Remember Me */}
+
               <div className="flex items-center">
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -255,7 +407,9 @@ const handleaccount = () => {
                   />
 
                   <span className="text-xs sm:text-sm text-gray-600">
+
                     Remember me
+
                   </span>
 
                 </label>
@@ -263,23 +417,30 @@ const handleaccount = () => {
               </div>
 
               {/* Login Button */}
+
               <button
                 type="submit"
                 className="w-full h-12 sm:h-14 flex items-center justify-center gap-2 bg-primary text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-blue-700 transition shadow-lg shadow-primary/20"
               >
+
                 Login
+
                 <RiArrowRightLine className="text-lg sm:text-xl" />
+
               </button>
 
             </form>
 
             {/* Divider */}
+
             <div className="flex items-center gap-3 sm:gap-4 my-6 sm:my-7">
 
               <div className="flex-1 h-px bg-gray-200" />
 
               <span className="text-xs sm:text-sm text-gray-400">
+
                 OR
+
               </span>
 
               <div className="flex-1 h-px bg-gray-200" />
@@ -287,31 +448,41 @@ const handleaccount = () => {
             </div>
 
             {/* Register */}
+
             <div className="text-center">
 
               <p className="text-xs sm:text-sm text-gray-500">
+
                 New to TechNova?
+
               </p>
 
               <button
                 type="button"
-                onClick={()=> navigate("/create-account")}
+                onClick={handleaccount}
                 className="mt-1.5 text-sm sm:text-base text-primary font-semibold hover:underline"
               >
+
                 Create an Account
+
               </button>
 
             </div>
 
             {/* Footer */}
+
             <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-6 sm:mt-8">
+
               © 2026 TechNova Solutions. All rights reserved.
+
             </p>
 
           </div>
+
         </div>
 
       </div>
+
     </section>
   );
 };
