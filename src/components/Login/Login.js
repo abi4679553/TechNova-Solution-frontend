@@ -1,5 +1,9 @@
-import React, { useState, useContext } from "react";
+import React, {
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import {
   RiMailLine,
   RiLockPasswordLine,
@@ -8,198 +12,375 @@ import {
   RiArrowRightLine,
   RiShieldCheckLine,
 } from "react-icons/ri";
+
 import logo from "../../Assests/logo.png";
-import { AuthContext } from "../../AuthContext";
 
 const Login = () => {
-  const { checkAuth } = useContext(AuthContext);
+
   const navigate = useNavigate();
 
-  const [showPassword, setShowPassword] = useState(false);
+  // ===================================================
+  // STATES
+  // ===================================================
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    remember: false,
-  });
+  const [showPassword, setShowPassword] =
+    useState(false);
 
-  // ===============================
+  const [loading, setLoading] =
+    useState(false);
+
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      password: "",
+      remember: false,
+    });
+
+  // ===================================================
   // HANDLE INPUT CHANGE
-  // ===============================
+  // ===================================================
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
 
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+
+      [name]:
+        type === "checkbox"
+          ? checked
+          : value,
+    }));
   };
 
-  // ===============================
+  // ===================================================
   // LOGIN
-  // ===============================
+  // ===================================================
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
+    if (loading) {
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:5000/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
 
-      const data = await response.json();
+      setLoading(true);
 
-      // ===============================
-      // DEBUG LOGIN RESPONSE
-      // ===============================
+      // ===============================================
+      // LOGIN API
+      // ===============================================
 
-      console.log("================================");
-      console.log("LOGIN RESPONSE:", data);
-      console.log("USER:", data.user);
-      console.log("ID:", data.user?.Id);
-      console.log("EMPLOYEE ID:", data.user?.employeeId);
-      console.log("ROLE:", data.user?.role);
-      console.log("================================");
+      const response = await fetch(
+        "http://localhost:5000/login",
+        {
+          method: "POST",
 
-      // ===============================
+          credentials: "include",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            email:
+              formData.email.trim(),
+
+            password:
+              formData.password,
+          }),
+        }
+      );
+
+      // ===============================================
+      // RESPONSE
+      // ===============================================
+
+      const data =
+        await response.json();
+
+      console.log(
+        "================================"
+      );
+
+      console.log(
+        "LOGIN RESPONSE:",
+        data
+      );
+
+      console.log(
+        "USER:",
+        data?.user
+      );
+
+      console.log(
+        "ID:",
+        data?.user?.Id
+      );
+
+      console.log(
+        "EMPLOYEE ID:",
+        data?.user?.employeeId
+      );
+
+      console.log(
+        "ROLE:",
+        data?.user?.role
+      );
+
+      console.log(
+        "================================"
+      );
+
+      // ===============================================
       // LOGIN FAILED
-      // ===============================
+      // ===============================================
 
-      if (!data.success) {
-        alert(data.message || "Login failed");
+      if (!data?.success) {
+
+        alert(
+          data?.message ||
+          "Login failed"
+        );
+
         return;
       }
 
-      // ===============================
-      // CHECK USER DATA
-      // ===============================
+      // ===============================================
+      // USER DATA CHECK
+      // ===============================================
 
-      if (!data.user) {
-        alert("User data not found");
+      if (
+        !data?.user ||
+        typeof data.user !==
+          "object"
+      ) {
+
+        console.error(
+          "Invalid login user:",
+          data?.user
+        );
+
+        alert(
+          "User data not found"
+        );
+
         return;
       }
 
-      // ===============================
+      // ===============================================
+      // GET USER ID
+      // ===============================================
+
+      const rawUserId =
+        data.user.Id ||
+        data.user.employeeId ||
+        data.user.id;
+
+      if (!rawUserId) {
+
+        console.error(
+          "User ID missing:",
+          data.user
+        );
+
+        alert(
+          "User ID not found"
+        );
+
+        return;
+      }
+
+      // ===============================================
+      // NORMALIZE USER ID
+      // ===============================================
+
+      const userId =
+        String(rawUserId)
+          .trim()
+          .toUpperCase();
+
+      // ===============================================
+      // NORMALIZE ROLE
+      // ===============================================
+
+      const role =
+        String(
+          data.user.role ||
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+      // ===============================================
+      // CREATE CLEAN USER OBJECT
+      // ===============================================
+
+      const loggedInUser = {
+
+        ...data.user,
+
+        Id: userId,
+
+        role: role,
+
+      };
+
+      // ===============================================
       // SAVE USER
-      // ===============================
+      // ===============================================
 
       localStorage.setItem(
         "currentUser",
-        JSON.stringify(data.user)
+        JSON.stringify(
+          loggedInUser
+        )
       );
 
-      // ===============================
-      // GET USER ID
-      // ===============================
+      // ===============================================
+      // DEBUG STORAGE
+      // ===============================================
 
-      const userId =
-        data.user.Id ||
-        data.user.employeeId;
+      console.log(
+        "================================"
+      );
 
-      if (!userId) {
-        alert("User ID not found");
-        return;
-      }
+      console.log(
+        "SAVED CURRENT USER:",
+        loggedInUser
+      );
 
-      const Id = userId
-        .toString()
-        .trim()
-        .toUpperCase();
+      console.log(
+        "SAVED USER ID:",
+        loggedInUser.Id
+      );
 
-      console.log("FINAL USER ID:", Id);
+      console.log(
+        "SAVED USER ROLE:",
+        loggedInUser.role
+      );
 
-      // ===============================
-      // AUTH CHECK
-      // ===============================
+      console.log(
+        "================================"
+      );
 
-      if (typeof checkAuth === "function") {
-        await checkAuth();
-      }
-
-      // ===============================
+      // ===============================================
       // SUCCESS MESSAGE
-      // ===============================
-
-      alert("Login successful!");
-
-      // ===============================
-      // ID BASED ROUTING
-      // ===============================
-
-      if (Id.startsWith("EMP")) {
-        console.log("Employee Login");
-        navigate("/employee");
-        return;
-      }
-
-      if (Id.startsWith("ADM")) {
-        console.log("Admin Login");
-        navigate("/admin");
-        return;
-      }
-
-      // ===============================
-      // ROLE BASED FALLBACK
-      // ===============================
-
-      if (data.user.role === "employee") {
-        console.log("Employee Role Login");
-        navigate("/employee");
-        return;
-      }
-
-      if (data.user.role === "admin") {
-        console.log("Admin Role Login");
-        navigate("/admin");
-        return;
-      }
-
-      // ===============================
-      // INVALID ID / ROLE
-      // ===============================
+      // ===============================================
 
       alert(
-        `Invalid User ID or Role\n\nID: ${Id}\nRole: ${
-          data.user.role || "Not found"
+        "Login successful!"
+      );
+
+      // ===============================================
+      // EMPLOYEE
+      // ===============================================
+
+      if (
+        role === "employee" ||
+        userId.startsWith("EMP")
+      ) {
+
+        console.log(
+          "✅ Employee Login"
+        );
+
+        navigate(
+          "/employee"
+        );
+
+        return;
+      }
+
+      // ===============================================
+      // ADMIN
+      // ===============================================
+
+      if (
+        role === "admin" ||
+        userId.startsWith("ADM")
+      ) {
+
+        console.log(
+          "✅ Admin Login"
+        );
+
+        navigate(
+          "/admin"
+        );
+
+        return;
+      }
+
+      // ===============================================
+      // INVALID ROLE
+      // ===============================================
+
+      console.error(
+        "Invalid User:",
+        loggedInUser
+      );
+
+      alert(
+        `Invalid User ID or Role\n\nID: ${userId}\nRole: ${
+          role || "Not found"
         }`
       );
+
     } catch (error) {
-      console.log("Login error:", error);
-      alert("Unable to connect to server");
+
+      console.error(
+        "Login Error:",
+        error
+      );
+
+      alert(
+        "Unable to connect to server"
+      );
+
+    } finally {
+
+      setLoading(false);
+
     }
   };
 
-  // ===============================
+  // ===================================================
   // CREATE ACCOUNT
-  // ===============================
+  // ===================================================
 
-  const handleaccount = () => {
-    navigate("/create-account");
+  const handleAccount = () => {
+
+    navigate(
+      "/create-account"
+    );
+
   };
 
-  // ===============================
+  // ===================================================
   // UI
-  // ===============================
+  // ===================================================
 
   return (
+
     <section className="min-h-[calc(100vh-94px)] bg-gray-50 px-4 py-6 sm:px-6 sm:py-10 flex items-center justify-center">
 
       <div className="w-full max-w-6xl bg-white rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-2">
 
-        {/* ================= LEFT SIDE ================= */}
+        {/* =================================================
+            LEFT SIDE
+        ================================================= */}
 
         <div className="hidden lg:flex bg-primary text-white p-10 xl:p-14 relative overflow-hidden items-center">
-
-          {/* Background Circle */}
 
           <div className="absolute -top-30 -left-32 w-80 h-80 rounded-full bg-white/10" />
 
@@ -209,7 +390,7 @@ const Login = () => {
 
             <img
               src={logo}
-              alt="TechNova Solutions private limitates"
+              alt="TechNova Solutions"
               className=""
             />
 
@@ -227,8 +408,11 @@ const Login = () => {
 
             <p className="mt-6 text-blue-100 text-base xl:text-lg leading-relaxed max-w-md">
 
-              Manage your teams, projects and communication
-              from one powerful platform built for modern
+              Manage your teams,
+              projects and
+              communication from
+              one powerful platform
+              built for modern
               organizations.
 
             </p>
@@ -259,13 +443,15 @@ const Login = () => {
 
         </div>
 
-        {/* ================= RIGHT SIDE ================= */}
+        {/* =================================================
+            RIGHT SIDE
+        ================================================= */}
 
         <div className="w-full p-5 sm:p-8 md:p-10 lg:p-12">
 
           <div className="w-full max-w-md mx-auto">
 
-            {/* Mobile Logo */}
+            {/* MOBILE LOGO */}
 
             <div className="flex justify-center lg:hidden mb-6 sm:mb-8">
 
@@ -277,7 +463,7 @@ const Login = () => {
 
             </div>
 
-            {/* Heading */}
+            {/* HEADING */}
 
             <div className="mb-6 sm:mb-8">
 
@@ -289,20 +475,23 @@ const Login = () => {
 
               <p className="text-sm sm:text-base text-gray-500 mt-2">
 
-                Login to your TechNova account
+                Login to your
+                TechNova account
 
               </p>
 
             </div>
 
-            {/* ================= FORM ================= */}
+            {/* =================================================
+                FORM
+            ================================================= */}
 
             <form
               onSubmit={handleSubmit}
               className="space-y-4 sm:space-y-5"
             >
 
-              {/* Email */}
+              {/* EMAIL */}
 
               <div>
 
@@ -321,8 +510,12 @@ const Login = () => {
                   <input
                     type="email"
                     name="email"
-                    value={formData.email}
-                    onChange={handleChange}
+                    value={
+                      formData.email
+                    }
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter your work email"
                     required
                     className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-4 border border-gray-200 rounded-xl text-sm sm:text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition"
@@ -332,7 +525,7 @@ const Login = () => {
 
               </div>
 
-              {/* Password */}
+              {/* PASSWORD */}
 
               <div>
 
@@ -346,7 +539,11 @@ const Login = () => {
 
                   <button
                     type="button"
-                    onClick={() => navigate("/forgot-password")}
+                    onClick={() =>
+                      navigate(
+                        "/forgot-password"
+                      )
+                    }
                     className="text-xs sm:text-sm text-primary font-medium hover:underline"
                   >
 
@@ -363,10 +560,18 @@ const Login = () => {
                   />
 
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type={
+                      showPassword
+                        ? "text"
+                        : "password"
+                    }
                     name="password"
-                    value={formData.password}
-                    onChange={handleChange}
+                    value={
+                      formData.password
+                    }
+                    onChange={
+                      handleChange
+                    }
                     placeholder="Enter your password"
                     required
                     className="w-full h-12 sm:h-14 pl-11 sm:pl-12 pr-12 border border-gray-200 rounded-xl text-sm sm:text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition"
@@ -375,7 +580,9 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() =>
-                      setShowPassword(!showPassword)
+                      setShowPassword(
+                        !showPassword
+                      )
                     }
                     className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2 text-lg sm:text-xl text-gray-400 hover:text-primary"
                   >
@@ -392,7 +599,7 @@ const Login = () => {
 
               </div>
 
-              {/* Remember Me */}
+              {/* REMEMBER ME */}
 
               <div className="flex items-center">
 
@@ -401,8 +608,12 @@ const Login = () => {
                   <input
                     type="checkbox"
                     name="remember"
-                    checked={formData.remember}
-                    onChange={handleChange}
+                    checked={
+                      formData.remember
+                    }
+                    onChange={
+                      handleChange
+                    }
                     className="w-4 h-4 accent-primary"
                   />
 
@@ -416,22 +627,31 @@ const Login = () => {
 
               </div>
 
-              {/* Login Button */}
+              {/* LOGIN BUTTON */}
 
               <button
                 type="submit"
-                className="w-full h-12 sm:h-14 flex items-center justify-center gap-2 bg-primary text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-blue-700 transition shadow-lg shadow-primary/20"
+                disabled={loading}
+                className={`w-full h-12 sm:h-14 flex items-center justify-center gap-2 bg-primary text-white rounded-xl font-semibold text-sm sm:text-base transition shadow-lg shadow-primary/20 ${
+                  loading
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-blue-700"
+                }`}
               >
 
-                Login
+                {loading
+                  ? "Logging in..."
+                  : "Login"}
 
-                <RiArrowRightLine className="text-lg sm:text-xl" />
+                {!loading && (
+                  <RiArrowRightLine className="text-lg sm:text-xl" />
+                )}
 
               </button>
 
             </form>
 
-            {/* Divider */}
+            {/* DIVIDER */}
 
             <div className="flex items-center gap-3 sm:gap-4 my-6 sm:my-7">
 
@@ -447,7 +667,7 @@ const Login = () => {
 
             </div>
 
-            {/* Register */}
+            {/* REGISTER */}
 
             <div className="text-center">
 
@@ -459,7 +679,9 @@ const Login = () => {
 
               <button
                 type="button"
-                onClick={handleaccount}
+                onClick={
+                  handleAccount
+                }
                 className="mt-1.5 text-sm sm:text-base text-primary font-semibold hover:underline"
               >
 
@@ -469,11 +691,12 @@ const Login = () => {
 
             </div>
 
-            {/* Footer */}
+            {/* FOOTER */}
 
             <p className="text-center text-[11px] sm:text-xs text-gray-400 mt-6 sm:mt-8">
 
-              © 2026 TechNova Solutions. All rights reserved.
+              © 2026 TechNova Solutions.
+              All rights reserved.
 
             </p>
 
@@ -484,6 +707,7 @@ const Login = () => {
       </div>
 
     </section>
+
   );
 };
 

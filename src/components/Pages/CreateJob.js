@@ -1,9 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import {
+    ArrowLeft,
+    Plus,
+    Trash2,
+} from "lucide-react";
 
-const CreateJob = ({ user: propUser }) => {
+// =====================================================
+// SAFE LOCAL STORAGE USER
+// =====================================================
 
+const getStoredUser = () => {
+    try {
+        const savedUser = localStorage.getItem("currentUser");
+
+        if (
+            !savedUser ||
+            savedUser === "undefined" ||
+            savedUser === "null"
+        ) {
+            return null;
+        }
+
+        const parsedUser = JSON.parse(savedUser);
+
+        if (!parsedUser || typeof parsedUser !== "object") {
+            return null;
+        }
+
+        return parsedUser;
+    } catch (error) {
+        console.error("Stored User Error:", error);
+        return null;
+    }
+};
+
+// =====================================================
+// CREATE JOB
+// =====================================================
+
+const CreateJob = ({ user: propUser, onClose }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -12,29 +48,11 @@ const CreateJob = ({ user: propUser }) => {
     // =====================================================
 
     const [user, setUser] = useState(() => {
-
         if (propUser) {
             return propUser;
         }
 
-        try {
-
-            const savedUser =
-                localStorage.getItem("currentUser");
-
-            return savedUser
-                ? JSON.parse(savedUser)
-                : null;
-
-        } catch (error) {
-
-            console.error(
-                "User Parse Error:",
-                error
-            );
-
-            return null;
-        }
+        return getStoredUser();
     });
 
     // =====================================================
@@ -73,109 +91,185 @@ const CreateJob = ({ user: propUser }) => {
     const [loading, setLoading] = useState(false);
 
     // =====================================================
-    // GET LOGGED USER
+    // GET CURRENT USER
     // =====================================================
 
     useEffect(() => {
-
         if (propUser) {
-
             setUser(propUser);
+
+            console.log("Current User:", propUser);
+            console.log("Current User ID:", propUser?.Id);
 
             return;
         }
 
-        try {
+        const storedUser = getStoredUser();
 
-            const savedUser =
-                localStorage.getItem("currentUser");
+        if (storedUser) {
+            setUser(storedUser);
 
-            if (savedUser) {
-
-                const parsedUser =
-                    JSON.parse(savedUser);
-
-                setUser(parsedUser);
-
-                console.log(
-                    "Current User Loaded:",
-                    parsedUser
-                );
-
-                console.log(
-                    "Employee ID:",
-                    parsedUser?.Id
-                );
-            }
-
-        } catch (error) {
-
-            console.error(
-                "User Parse Error:",
-                error
+            console.log("Current User:", storedUser);
+            console.log("Current User ID:", storedUser?.Id);
+        } else {
+            console.log(
+                "No valid currentUser found in localStorage"
             );
         }
-
     }, [propUser]);
 
     // =====================================================
-    // GET ROLE
+    // ROLE
     // =====================================================
 
     const role =
-        location.pathname === "/admin"
+        user?.role?.toLowerCase() ||
+        (String(user?.Id || "")
+            .toUpperCase()
+            .startsWith("ADM")
             ? "admin"
-            : location.pathname === "/employee"
-                ? "employee"
-                : user?.role?.toLowerCase() ||
-                (
-                    user?.Id
-                        ?.toUpperCase()
-                        .startsWith("ADM")
-                        ? "admin"
-                        : "employee"
-                );
+            : "employee");
+
+    const isAdmin = role === "admin";
+    const isEmployee = role === "employee";
 
     // =====================================================
-    // GET EMPLOYEES
+    // DEBUG
     // =====================================================
 
     useEffect(() => {
+        console.log("================================");
+        console.log("CREATE JOB");
+        console.log("User:", user);
+        console.log("User ID:", user?.Id);
+        console.log("Role:", role);
+        console.log("Is Admin:", isAdmin);
+        console.log("Is Employee:", isEmployee);
+        console.log("================================");
+    }, [user, role, isAdmin, isEmployee]);
 
-        if (role !== "admin") {
+    // =====================================================
+    // LOAD EMPLOYEES
+    // FRONTEND ONLY
+    // =====================================================
+
+    useEffect(() => {
+        if (!isAdmin) {
+            setEmployees([]);
             return;
         }
 
         try {
+            let employeeList = [];
+
+            // -------------------------------------------------
+            // FIRST: employees localStorage
+            // -------------------------------------------------
 
             const savedEmployees =
-                localStorage.getItem(
-                    "employees"
-                );
+                localStorage.getItem("employees");
 
-            if (savedEmployees) {
+            if (
+                savedEmployees &&
+                savedEmployees !== "undefined" &&
+                savedEmployees !== "null"
+            ) {
+                try {
+                    const parsedEmployees =
+                        JSON.parse(savedEmployees);
 
-                const parsedEmployees =
-                    JSON.parse(
-                        savedEmployees
+                    if (Array.isArray(parsedEmployees)) {
+                        employeeList = parsedEmployees;
+                    }
+                } catch (error) {
+                    console.error(
+                        "Employees Parse Error:",
+                        error
                     );
-
-                setEmployees(
-                    Array.isArray(
-                        parsedEmployees
-                    )
-                        ? parsedEmployees
-                        : []
-                );
-
-            } else {
-
-                setEmployees([]);
-
+                }
             }
 
-        } catch (error) {
+            // -------------------------------------------------
+            // SECOND: users localStorage
+            // -------------------------------------------------
 
+            if (employeeList.length === 0) {
+                const savedUsers =
+                    localStorage.getItem("users");
+
+                if (
+                    savedUsers &&
+                    savedUsers !== "undefined" &&
+                    savedUsers !== "null"
+                ) {
+                    try {
+                        const parsedUsers =
+                            JSON.parse(savedUsers);
+
+                        if (Array.isArray(parsedUsers)) {
+                            employeeList =
+                                parsedUsers.filter((item) => {
+                                    const itemRole =
+                                        String(
+                                            item?.role || ""
+                                        ).toLowerCase();
+
+                                    return (
+                                        itemRole ===
+                                            "employee" ||
+                                        String(
+                                            item?.Id || ""
+                                        )
+                                            .toUpperCase()
+                                            .startsWith("EMP")
+                                    );
+                                });
+                        }
+                    } catch (error) {
+                        console.error(
+                            "Users Parse Error:",
+                            error
+                        );
+                    }
+                }
+            }
+
+            // -------------------------------------------------
+            // REMOVE DUPLICATE EMPLOYEE IDs
+            // -------------------------------------------------
+
+            const uniqueEmployees = employeeList.filter(
+                (employee, index, array) => {
+                    const employeeId =
+                        employee?.Id ||
+                        employee?.employeeId ||
+                        employee?.id;
+
+                    if (!employeeId) {
+                        return false;
+                    }
+
+                    return (
+                        index ===
+                        array.findIndex((item) => {
+                            const itemId =
+                                item?.Id ||
+                                item?.employeeId ||
+                                item?.id;
+
+                            return itemId === employeeId;
+                        })
+                    );
+                }
+            );
+
+            setEmployees(uniqueEmployees);
+
+            console.log(
+                "Employees Loaded For Assign Job:",
+                uniqueEmployees
+            );
+        } catch (error) {
             console.error(
                 "Employee Load Error:",
                 error
@@ -183,19 +277,14 @@ const CreateJob = ({ user: propUser }) => {
 
             setEmployees([]);
         }
-
-    }, [role]);
+    }, [isAdmin]);
 
     // =====================================================
     // FORM CHANGE
     // =====================================================
 
     const handleChange = (e) => {
-
-        const {
-            name,
-            value,
-        } = e.target;
+        const { name, value } = e.target;
 
         setFormData((prev) => ({
             ...prev,
@@ -212,17 +301,16 @@ const CreateJob = ({ user: propUser }) => {
         field,
         value
     ) => {
-
-        const updatedTasks = [
-            ...tasks,
-        ];
-
-        updatedTasks[index] = {
-            ...updatedTasks[index],
-            [field]: value,
-        };
-
-        setTasks(updatedTasks);
+        setTasks((prev) =>
+            prev.map((task, i) =>
+                i === index
+                    ? {
+                          ...task,
+                          [field]: value,
+                      }
+                    : task
+            )
+        );
     };
 
     // =====================================================
@@ -230,10 +318,8 @@ const CreateJob = ({ user: propUser }) => {
     // =====================================================
 
     const addTask = () => {
-
         setTasks((prev) => [
             ...prev,
-
             {
                 taskName: "",
                 hours: "",
@@ -246,16 +332,12 @@ const CreateJob = ({ user: propUser }) => {
     // =====================================================
 
     const removeTask = (index) => {
-
         if (tasks.length === 1) {
             return;
         }
 
         setTasks((prev) =>
-            prev.filter(
-                (_, i) =>
-                    i !== index
-            )
+            prev.filter((_, i) => i !== index)
         );
     };
 
@@ -265,30 +347,23 @@ const CreateJob = ({ user: propUser }) => {
     // =====================================================
 
     const handleEmployeeChange = (e) => {
-
-        const employeeId =
-            e.target.value;
+        const employeeId = e.target.value;
 
         if (!employeeId) {
             return;
         }
 
-        if (role !== "admin") {
+        if (!isAdmin) {
             return;
         }
 
         if (
-            !selectedEmployees.includes(
-                employeeId
-            )
+            !selectedEmployees.includes(employeeId)
         ) {
-
-            setSelectedEmployees(
-                (prev) => [
-                    ...prev,
-                    employeeId,
-                ]
-            );
+            setSelectedEmployees((prev) => [
+                ...prev,
+                employeeId,
+            ]);
         }
     };
 
@@ -296,20 +371,15 @@ const CreateJob = ({ user: propUser }) => {
     // REMOVE EMPLOYEE
     // =====================================================
 
-    const removeEmployee = (
-        employeeId
-    ) => {
-
-        if (role !== "admin") {
+    const removeEmployee = (employeeId) => {
+        if (!isAdmin) {
             return;
         }
 
-        setSelectedEmployees(
-            (prev) =>
-                prev.filter(
-                    (id) =>
-                        id !== employeeId
-                )
+        setSelectedEmployees((prev) =>
+            prev.filter(
+                (id) => id !== employeeId
+            )
         );
     };
 
@@ -317,155 +387,119 @@ const CreateJob = ({ user: propUser }) => {
     // TOTAL HOURS
     // =====================================================
 
-    const totalHours =
-        tasks.reduce(
-            (total, task) =>
-                total +
-                Number(
-                    task.hours || 0
-                ),
-            0
-        );
+    const totalHours = tasks.reduce(
+        (total, task) =>
+            total + Number(task.hours || 0),
+        0
+    );
+
+    // =====================================================
+    // CLOSE FORM
+    // =====================================================
+
+    const handleClose = () => {
+        if (onClose) {
+            onClose();
+            return;
+        }
+
+        navigate(-1);
+    };
 
     // =====================================================
     // SUBMIT JOB
     // =====================================================
 
     const handleSubmit = async (e) => {
-
         e.preventDefault();
 
-        // =================================================
+        // ===================================================
         // GET CURRENT USER
-        // =================================================
+        // ===================================================
 
-        let currentUser = user;
+        const currentUser =
+            user || getStoredUser();
 
-        try {
-
-            const savedUser =
-                localStorage.getItem(
-                    "currentUser"
-                );
-
-            if (savedUser) {
-
-                currentUser =
-                    JSON.parse(
-                        savedUser
-                    );
-            }
-
-        } catch (error) {
-
-            console.error(
-                "Current User Error:",
-                error
-            );
-        }
-
-        // =================================================
-        // USER CHECK
-        // =================================================
+        // ===================================================
+        // USER VALIDATION
+        // ===================================================
 
         if (!currentUser?.Id) {
-
             alert(
                 "User information not found. Please login again."
+            );
+
+            console.error(
+                "Invalid User:",
+                currentUser
             );
 
             return;
         }
 
         console.log(
-            "Submitting Employee ID:",
+            "Submitting Job By:",
             currentUser.Id
         );
 
-        // =================================================
+        console.log(
+            "Submitting Job Role:",
+            role
+        );
+
+        // ===================================================
         // PROJECT ID
-        // =================================================
+        // ===================================================
 
-        if (
-            !formData.projectId.trim()
-        ) {
-
-            alert(
-                "Please enter Project ID"
-            );
-
+        if (!formData.projectId.trim()) {
+            alert("Please enter Project ID");
             return;
         }
 
-        // =================================================
+        // ===================================================
         // JOB TITLE
-        // =================================================
+        // ===================================================
 
-        if (
-            !formData.jobTitle.trim()
-        ) {
-
-            alert(
-                "Please enter Job Title"
-            );
-
+        if (!formData.jobTitle.trim()) {
+            alert("Please enter Job Title");
             return;
         }
 
-        // =================================================
+        // ===================================================
         // DESCRIPTION
-        // =================================================
+        // ===================================================
 
-        if (
-            !formData.description.trim()
-        ) {
-
-            alert(
-                "Please enter Job Description"
-            );
-
+        if (!formData.description.trim()) {
+            alert("Please enter Job Description");
             return;
         }
 
-        // =================================================
+        // ===================================================
         // START DATE
-        // =================================================
+        // ===================================================
 
         if (!formData.startDate) {
-
-            alert(
-                "Please select Start Date"
-            );
-
+            alert("Please select Start Date");
             return;
         }
 
-        // =================================================
+        // ===================================================
         // DUE DATE
-        // =================================================
+        // ===================================================
 
         if (!formData.deadline) {
-
-            alert(
-                "Please select Due Date"
-            );
-
+            alert("Please select Due Date");
             return;
         }
 
-        // =================================================
+        // ===================================================
         // DATE VALIDATION
-        // =================================================
+        // ===================================================
 
         if (
-            new Date(
-                formData.deadline
-            ) <
-            new Date(
-                formData.startDate
-            )
+            new Date(formData.deadline) <
+            new Date(formData.startDate)
         ) {
-
             alert(
                 "Due Date cannot be before Start Date"
             );
@@ -473,21 +507,32 @@ const CreateJob = ({ user: propUser }) => {
             return;
         }
 
-        // =================================================
-        // VALID TASKS
-        // =================================================
-
-        const validTasks =
-            tasks.filter(
-                (task) =>
-                    task.taskName.trim() &&
-                    Number(task.hours) > 0
-            );
+        // ===================================================
+        // ADMIN EMPLOYEE VALIDATION
+        // ===================================================
 
         if (
-            validTasks.length === 0
+            isAdmin &&
+            selectedEmployees.length === 0
         ) {
+            alert(
+                "Please select at least one Employee ID"
+            );
 
+            return;
+        }
+
+        // ===================================================
+        // VALID TASKS
+        // ===================================================
+
+        const validTasks = tasks.filter(
+            (task) =>
+                task.taskName.trim() &&
+                Number(task.hours) > 0
+        );
+
+        if (validTasks.length === 0) {
             alert(
                 "Please add at least one valid task"
             );
@@ -495,28 +540,31 @@ const CreateJob = ({ user: propUser }) => {
             return;
         }
 
-        // =================================================
-        // EMPLOYEE ASSIGNMENT CHECK
-        // =================================================
+        // ===================================================
+        // ADMIN ASSIGNMENT
+        // ===================================================
 
-        if (
-            role === "employee" &&
-            selectedEmployees.length > 0
-        ) {
+        const assignedEmployees = isAdmin
+            ? selectedEmployees
+            : [];
 
-            alert(
-                "Employee cannot assign jobs to other employees"
-            );
+        // ===================================================
+        // JOB STATUS
+        // ===================================================
 
-            return;
-        }
+        const initialStatus = isAdmin
+            ? "approved"
+            : "pending";
 
-        // =================================================
+        const initialApprovalStatus = isAdmin
+            ? "approved"
+            : "pending";
+
+        // ===================================================
         // JOB DATA
-        // =================================================
+        // ===================================================
 
         const jobData = {
-
             id: Date.now(),
 
             projectId:
@@ -531,12 +579,17 @@ const CreateJob = ({ user: propUser }) => {
             jobDescription:
                 formData.description.trim(),
 
+            // AUTOMATIC USER ID
             createdBy:
                 currentUser.Id,
 
+            // AUTOMATIC USER NAME
             createdByName:
-                currentUser.fullName,
+                currentUser.fullName ||
+                currentUser.name ||
+                "User",
 
+            // AUTOMATIC ROLE
             createdByRole:
                 role,
 
@@ -547,92 +600,93 @@ const CreateJob = ({ user: propUser }) => {
                 formData.deadline,
 
             tasks:
-                validTasks.map(
-                    (task) => ({
-                        taskName:
-                            task.taskName.trim(),
+                validTasks.map((task) => ({
+                    taskName:
+                        task.taskName.trim(),
 
-                        hours:
-                            Number(
-                                task.hours
-                            ),
-                    })
-                ),
+                    hours:
+                        Number(task.hours),
+                })),
 
             totalHours:
                 totalHours,
 
+            // ADMIN ONLY
             assignedEmployees:
-                role === "admin"
-                    ? selectedEmployees
-                    : [],
+                assignedEmployees,
 
+            // STATUS
             status:
-                "pending",
+                initialStatus,
 
+            // APPROVAL STATUS
             approvalStatus:
-                "pending",
+                initialApprovalStatus,
 
+            // CREATED DATE
             createdAt:
                 new Date().toISOString(),
         };
 
-        // =================================================
+        console.log(
+            "Final Job Data:",
+            jobData
+        );
+
+        // ===================================================
         // SAVE JOB
-        // =================================================
+        // ===================================================
 
         try {
-
             setLoading(true);
+
+            // ================================================
+            // GET EXISTING JOBS
+            // ================================================
 
             let existingJobs = [];
 
-            try {
+            const savedJobs =
+                localStorage.getItem("jobs");
 
-                const savedJobs =
-                    localStorage.getItem(
-                        "jobs"
+            if (
+                savedJobs &&
+                savedJobs !== "undefined" &&
+                savedJobs !== "null"
+            ) {
+                try {
+                    const parsedJobs =
+                        JSON.parse(savedJobs);
+
+                    if (Array.isArray(parsedJobs)) {
+                        existingJobs = parsedJobs;
+                    }
+                } catch (error) {
+                    console.error(
+                        "Jobs Parse Error:",
+                        error
                     );
 
-                if (savedJobs) {
-
-                    const parsedJobs =
-                        JSON.parse(
-                            savedJobs
-                        );
-
-                    existingJobs =
-                        Array.isArray(
-                            parsedJobs
-                        )
-                            ? parsedJobs
-                            : [];
+                    existingJobs = [];
                 }
-
-            } catch (error) {
-
-                console.error(
-                    "Jobs Parse Error:",
-                    error
-                );
-
-                existingJobs = [];
             }
 
-            // =================================================
-            // SAVE JOB
-            // =================================================
+            // ================================================
+            // ADD NEW JOB
+            // ================================================
 
             const updatedJobs = [
                 jobData,
                 ...existingJobs,
             ];
 
+            // ================================================
+            // SAVE JOBS
+            // ================================================
+
             localStorage.setItem(
                 "jobs",
-                JSON.stringify(
-                    updatedJobs
-                )
+                JSON.stringify(updatedJobs)
             );
 
             console.log(
@@ -640,27 +694,24 @@ const CreateJob = ({ user: propUser }) => {
                 jobData
             );
 
-            // =================================================
+            // ================================================
             // EMPLOYEE → ADMIN NOTIFICATION
-            // =================================================
+            // ================================================
 
-            if (
-                role === "employee"
-            ) {
-
+            if (isEmployee) {
                 const notification = {
+                    id: Date.now().toString(),
 
-                    id:
-                        Date.now().toString(),
-
-                    type:
-                        "job-approval",
+                    type: "job-approval",
 
                     title:
                         "New Job Approval Request",
 
                     message:
-                        `${currentUser.Id} - ${currentUser.fullName || "Employee"} submitted a new job for approval.`,
+                        `${currentUser.Id} - ${
+                            currentUser.fullName ||
+                            "Employee"
+                        } submitted a new job for approval.`,
 
                     employeeId:
                         currentUser.Id,
@@ -688,93 +739,75 @@ const CreateJob = ({ user: propUser }) => {
                         formData.deadline,
 
                     tasks:
-                        validTasks.map(
-                            (task) => ({
+                        validTasks.map((task) => ({
+                            taskName:
+                                task.taskName.trim(),
 
-                                taskName:
-                                    task.taskName.trim(),
-
-                                hours:
-                                    Number(
-                                        task.hours
-                                    ),
-
-                            })
-                        ),
+                            hours:
+                                Number(task.hours),
+                        })),
 
                     totalHours:
                         totalHours,
 
-                    status:
-                        "pending",
+                    status: "pending",
 
                     approvalStatus:
                         "pending",
 
-                    isRead:
-                        false,
+                    isRead: false,
 
                     createdAt:
                         new Date().toISOString(),
                 };
 
-                console.log(
-                    "New Admin Notification:",
-                    notification
-                );
-
-                // =================================================
+                // ==============================================
                 // GET OLD NOTIFICATIONS
-                // =================================================
+                // ==============================================
 
-                let existingNotifications =
-                    [];
+                let existingNotifications = [];
 
-                try {
+                const savedNotifications =
+                    localStorage.getItem(
+                        "adminNotifications"
+                    );
 
-                    const savedNotifications =
-                        localStorage.getItem(
-                            "adminNotifications"
-                        );
-
-                    if (
-                        savedNotifications
-                    ) {
-
+                if (
+                    savedNotifications &&
+                    savedNotifications !== "undefined" &&
+                    savedNotifications !== "null"
+                ) {
+                    try {
                         const parsedNotifications =
                             JSON.parse(
                                 savedNotifications
                             );
 
-                        existingNotifications =
+                        if (
                             Array.isArray(
                                 parsedNotifications
                             )
-                                ? parsedNotifications
-                                : [];
+                        ) {
+                            existingNotifications =
+                                parsedNotifications;
+                        }
+                    } catch (error) {
+                        console.error(
+                            "Notification Parse Error:",
+                            error
+                        );
+
+                        existingNotifications = [];
                     }
-
-                } catch (error) {
-
-                    console.error(
-                        "Notification Parse Error:",
-                        error
-                    );
-
-                    existingNotifications =
-                        [];
                 }
 
-                // =================================================
-                // SAVE NEW NOTIFICATION
-                // =================================================
+                // ==============================================
+                // SAVE NOTIFICATION
+                // ==============================================
 
                 const updatedNotifications = [
-
                     notification,
-
                     ...existingNotifications,
-
                 ];
 
                 localStorage.setItem(
@@ -786,12 +819,12 @@ const CreateJob = ({ user: propUser }) => {
 
                 console.log(
                     "Admin Notification Saved:",
-                    updatedNotifications
+                    notification
                 );
 
-                // =================================================
-                // UPDATE ADMIN BELL IMMEDIATELY
-                // =================================================
+                // ==============================================
+                // ADMIN NOTIFICATION UPDATE
+                // ==============================================
 
                 window.dispatchEvent(
                     new Event(
@@ -800,56 +833,40 @@ const CreateJob = ({ user: propUser }) => {
                 );
             }
 
-            // =================================================
-            // ADMIN JOB
-            // =================================================
+            // ================================================
+            // JOB UPDATE EVENT
+            // ================================================
 
-            if (
-                role === "admin"
-            ) {
+            window.dispatchEvent(
+                new Event("jobsUpdated")
+            );
 
+            // ================================================
+            // SUCCESS MESSAGE
+            // ================================================
+
+            if (isAdmin) {
                 alert(
                     "Job created and assigned successfully!"
                 );
-
-            }
-
-            // =================================================
-            // EMPLOYEE JOB
-            // =================================================
-
-            if (
-                role === "employee"
-            ) {
-
+            } else {
                 alert(
                     "Job submitted successfully! Waiting for Admin approval."
                 );
-
             }
 
-            // =================================================
-            // NAVIGATION
-            // =================================================
+            // ================================================
+            // CLOSE / NAVIGATION
+            // ================================================
 
-            if (
-                role === "admin"
-            ) {
-
-                navigate(
-                    "/admin"
-                );
-
+            if (onClose) {
+                onClose();
+            } else if (isAdmin) {
+                navigate("/admin");
             } else {
-
-                navigate(
-                    "/employee"
-                );
-
+                navigate("/employee");
             }
-
         } catch (error) {
-
             console.error(
                 "Create Job Error:",
                 error
@@ -858,11 +875,8 @@ const CreateJob = ({ user: propUser }) => {
             alert(
                 "Failed to save job."
             );
-
         } finally {
-
             setLoading(false);
-
         }
     };
 
@@ -871,53 +885,88 @@ const CreateJob = ({ user: propUser }) => {
     // =====================================================
 
     return (
-
         <div className="min-h-screen bg-slate-50 py-8 px-4">
 
             <div className="max-w-5xl mx-auto">
 
-                {/* HEADER */}
+                {/* =================================================
+                    HEADER
+                ================================================= */}
 
                 <div className="flex items-center gap-4 mb-6">
 
                     <button
                         type="button"
-                        onClick={() =>
-                            navigate(-1)
-                        }
-                        className="p-2 bg-white border rounded-lg hover:bg-gray-100"
+                        onClick={handleClose}
+                        className="p-2 bg-white border rounded-lg hover:bg-gray-100 transition"
                     >
-
-                        <ArrowLeft
-                            size={22}
-                        />
-
+                        <ArrowLeft size={22} />
                     </button>
 
                     <div>
-
                         <h1 className="text-3xl font-bold text-gray-800">
                             Create Job
                         </h1>
 
                         <p className="text-gray-500 mt-1">
-                            Create and submit a new job
+                            {isAdmin
+                                ? "Create and assign a job to employees"
+                                : "Create and submit a job for admin approval"}
                         </p>
+                    </div>
+
+                </div>
+
+                {/* =================================================
+                    USER / ROLE INFO
+                ================================================= */}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
+
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
+                        <div>
+
+                            <p className="text-xs text-blue-500 font-medium">
+                                Logged in as
+                            </p>
+
+                            <p className="font-semibold text-blue-800">
+                                {user?.fullName ||
+                                    user?.name ||
+                                    "User"}
+                            </p>
+
+                        </div>
+
+                        <div>
+
+                            <p className="text-xs text-blue-500 font-medium">
+                                Role
+                            </p>
+
+                            <span className="inline-block mt-1 px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-semibold capitalize">
+                                {role}
+                            </span>
+
+                        </div>
 
                     </div>
 
                 </div>
 
-                {/* FORM */}
+                {/* =================================================
+                    FORM
+                ================================================= */}
 
                 <form
-                    onSubmit={
-                        handleSubmit
-                    }
+                    onSubmit={handleSubmit}
                     className="bg-white border rounded-2xl shadow-sm p-6 md:p-8"
                 >
 
-                    {/* JOB INFORMATION */}
+                    {/* =================================================
+                        JOB INFORMATION
+                    ================================================= */}
 
                     <h2 className="text-xl font-semibold text-gray-800 mb-5">
                         Job Information
@@ -936,12 +985,8 @@ const CreateJob = ({ user: propUser }) => {
                             <input
                                 type="text"
                                 name="projectId"
-                                value={
-                                    formData.projectId
-                                }
-                                onChange={
-                                    handleChange
-                                }
+                                value={formData.projectId}
+                                onChange={handleChange}
                                 placeholder="Enter Project ID"
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
@@ -959,12 +1004,8 @@ const CreateJob = ({ user: propUser }) => {
                             <input
                                 type="text"
                                 name="jobTitle"
-                                value={
-                                    formData.jobTitle
-                                }
-                                onChange={
-                                    handleChange
-                                }
+                                value={formData.jobTitle}
+                                onChange={handleChange}
                                 placeholder="Enter Job Title"
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
@@ -981,12 +1022,8 @@ const CreateJob = ({ user: propUser }) => {
 
                             <select
                                 name="jobType"
-                                value={
-                                    formData.jobType
-                                }
-                                onChange={
-                                    handleChange
-                                }
+                                value={formData.jobType}
+                                onChange={handleChange}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             >
 
@@ -1020,18 +1057,18 @@ const CreateJob = ({ user: propUser }) => {
 
                             <input
                                 type="text"
-                                value={
-                                    user?.Id || ""
-                                }
+                                value={user?.Id || ""}
                                 readOnly
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-600"
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-600 cursor-not-allowed"
                             />
 
                         </div>
 
                     </div>
 
-                    {/* DESCRIPTION */}
+                    {/* =================================================
+                        DESCRIPTION
+                    ================================================= */}
 
                     <div className="mt-6">
 
@@ -1041,12 +1078,8 @@ const CreateJob = ({ user: propUser }) => {
 
                         <textarea
                             name="description"
-                            value={
-                                formData.description
-                            }
-                            onChange={
-                                handleChange
-                            }
+                            value={formData.description}
+                            onChange={handleChange}
                             rows="5"
                             placeholder="Enter job description"
                             className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none resize-none focus:ring-2 focus:ring-blue-500"
@@ -1054,7 +1087,9 @@ const CreateJob = ({ user: propUser }) => {
 
                     </div>
 
-                    {/* DATES */}
+                    {/* =================================================
+                        DATES
+                    ================================================= */}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
 
@@ -1067,12 +1102,8 @@ const CreateJob = ({ user: propUser }) => {
                             <input
                                 type="date"
                                 name="startDate"
-                                value={
-                                    formData.startDate
-                                }
-                                onChange={
-                                    handleChange
-                                }
+                                value={formData.startDate}
+                                onChange={handleChange}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
 
@@ -1087,12 +1118,8 @@ const CreateJob = ({ user: propUser }) => {
                             <input
                                 type="date"
                                 name="deadline"
-                                value={
-                                    formData.deadline
-                                }
-                                onChange={
-                                    handleChange
-                                }
+                                value={formData.deadline}
+                                onChange={handleChange}
                                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                             />
 
@@ -1100,7 +1127,9 @@ const CreateJob = ({ user: propUser }) => {
 
                     </div>
 
-                    {/* TASKS */}
+                    {/* =================================================
+                        TASKS
+                    ================================================= */}
 
                     <div className="mt-8">
 
@@ -1112,18 +1141,11 @@ const CreateJob = ({ user: propUser }) => {
 
                             <button
                                 type="button"
-                                onClick={
-                                    addTask
-                                }
+                                onClick={addTask}
                                 className="flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700"
                             >
-
-                                <Plus
-                                    size={18}
-                                />
-
+                                <Plus size={18} />
                                 Add Task
-
                             </button>
 
                         </div>
@@ -1131,19 +1153,14 @@ const CreateJob = ({ user: propUser }) => {
                         <div className="space-y-4">
 
                             {tasks.map(
-                                (
-                                    task,
-                                    index
-                                ) => (
+                                (task, index) => (
 
                                     <div
-                                        key={
-                                            index
-                                        }
+                                        key={index}
                                         className="grid grid-cols-1 md:grid-cols-[1fr_150px_auto] gap-3 bg-gray-50 border rounded-lg p-4"
                                     >
 
-                                        {/* TASK */}
+                                        {/* TASK NAME */}
 
                                         <div>
 
@@ -1153,12 +1170,8 @@ const CreateJob = ({ user: propUser }) => {
 
                                             <input
                                                 type="text"
-                                                value={
-                                                    task.taskName
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
+                                                value={task.taskName}
+                                                onChange={(e) =>
                                                     handleTaskChange(
                                                         index,
                                                         "taskName",
@@ -1182,12 +1195,8 @@ const CreateJob = ({ user: propUser }) => {
                                             <input
                                                 type="number"
                                                 min="1"
-                                                value={
-                                                    task.hours
-                                                }
-                                                onChange={(
-                                                    e
-                                                ) =>
+                                                value={task.hours}
+                                                onChange={(e) =>
                                                     handleTaskChange(
                                                         index,
                                                         "hours",
@@ -1205,21 +1214,14 @@ const CreateJob = ({ user: propUser }) => {
                                         <button
                                             type="button"
                                             onClick={() =>
-                                                removeTask(
-                                                    index
-                                                )
+                                                removeTask(index)
                                             }
                                             disabled={
-                                                tasks.length ===
-                                                1
+                                                tasks.length === 1
                                             }
                                             className="p-3 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-30"
                                         >
-
-                                            <Trash2
-                                                size={20}
-                                            />
-
+                                            <Trash2 size={20} />
                                         </button>
 
                                     </div>
@@ -1245,91 +1247,92 @@ const CreateJob = ({ user: propUser }) => {
 
                     </div>
 
-                    {/* ASSIGN EMPLOYEES */}
+                    {/* =================================================
+                        ASSIGN EMPLOYEES
+                        ADMIN ONLY
+                    ================================================= */}
 
-                    <div className="mt-8">
+                    {isAdmin && (
 
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                            Assign Employees
-                        </h2>
+                        <div className="mt-8">
 
-                        <select
-                            value=""
-                            onChange={
-                                handleEmployeeChange
-                            }
-                            disabled={
-                                role !== "admin"
-                            }
-                            className={`w-full border border-gray-300 rounded-lg px-4 py-3 outline-none ${
-                                role === "admin"
-                                    ? "bg-white focus:ring-2 focus:ring-blue-500"
-                                    : "bg-gray-100 text-gray-500 cursor-not-allowed"
-                            }`}
-                        >
+                            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                                Assign Employees
+                            </h2>
 
-                            <option value="">
-                                {role === "admin"
-                                    ? "Select Employee"
-                                    : "Only Admin can assign employees"}
-                            </option>
+                            {/* EMPLOYEE DROPDOWN */}
 
-                            {role === "admin" &&
-                                employees.map(
-                                    (
-                                        employee
-                                    ) => (
+                            <select
+                                value=""
+                                onChange={handleEmployeeChange}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none bg-white focus:ring-2 focus:ring-blue-500"
+                            >
 
-                                        <option
-                                            key={
-                                                employee._id ||
-                                                employee.Id
-                                            }
-                                            value={
-                                                employee.Id
-                                            }
-                                        >
+                                <option value="">
+                                    Select Employee ID
+                                </option>
 
-                                            {
-                                                employee.Id
-                                            }
+                                {employees.length === 0 ? (
 
-                                            {" - "}
+                                    <option value="" disabled>
+                                        No employees available
+                                    </option>
 
-                                            {
-                                                employee.fullName
+                                ) : (
+
+                                    employees.map(
+                                        (employee, index) => {
+
+                                            const employeeId =
+                                                employee?.Id ||
+                                                employee?.employeeId ||
+                                                employee?.id;
+
+                                            const employeeName =
+                                                employee?.fullName ||
+                                                employee?.name ||
+                                                "Employee";
+
+                                            if (!employeeId) {
+                                                return null;
                                             }
 
-                                        </option>
-
+                                            return (
+                                                <option
+                                                    key={
+                                                        employee?._id ||
+                                                        employeeId ||
+                                                        index
+                                                    }
+                                                    value={employeeId}
+                                                >
+                                                    {employeeId} -{" "}
+                                                    {employeeName}
+                                                </option>
+                                            );
+                                        }
                                     )
+
                                 )}
 
-                        </select>
+                            </select>
 
-                        {/* SELECTED EMPLOYEES */}
+                            {/* SELECTED EMPLOYEES */}
 
-                        {selectedEmployees.length >
-                            0 && (
+                            {selectedEmployees.length > 0 && (
 
                                 <div className="mt-4 space-y-2">
 
                                     {selectedEmployees.map(
-                                        (
-                                            employeeId
-                                        ) => (
+                                        (employeeId) => (
 
                                             <div
-                                                key={
-                                                    employeeId
-                                                }
+                                                key={employeeId}
                                                 className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3"
                                             >
 
                                                 <span className="font-medium text-blue-700">
-                                                    {
-                                                        employeeId
-                                                    }
+                                                    {employeeId}
                                                 </span>
 
                                                 <button
@@ -1339,17 +1342,9 @@ const CreateJob = ({ user: propUser }) => {
                                                             employeeId
                                                         )
                                                     }
-                                                    disabled={
-                                                        role !==
-                                                        "admin"
-                                                    }
-                                                    className="text-red-500 hover:text-red-700 disabled:opacity-30"
+                                                    className="text-red-500 hover:text-red-700"
                                                 >
-
-                                                    <Trash2
-                                                        size={18}
-                                                    />
-
+                                                    <Trash2 size={18} />
                                                 </button>
 
                                             </div>
@@ -1361,45 +1356,59 @@ const CreateJob = ({ user: propUser }) => {
 
                             )}
 
-                        {role ===
-                            "employee" && (
+                        </div>
 
-                                <p className="mt-2 text-sm text-gray-500">
-                                    Only Admin can assign this job
-                                    to another employee.
-                                </p>
+                    )}
 
-                            )}
+                    {/* =================================================
+                        EMPLOYEE INFORMATION
+                    ================================================= */}
 
-                    </div>
+                    {isEmployee && (
 
-                    {/* BUTTONS */}
+                        <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+
+                            <p className="text-sm font-semibold text-yellow-800">
+                                Approval Required
+                            </p>
+
+                            <p className="text-sm text-yellow-700 mt-1">
+                                After submitting this job, it will be sent to the Admin for approval.
+                            </p>
+
+                        </div>
+
+                    )}
+
+                    {/* =================================================
+                        BUTTONS
+                    ================================================= */}
 
                     <div className="flex flex-col sm:flex-row justify-end gap-3 mt-8 pt-6 border-t">
 
+                        {/* CANCEL */}
+
                         <button
                             type="button"
-                            onClick={() =>
-                                navigate(-1)
-                            }
+                            onClick={handleClose}
                             className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
                         >
                             Cancel
                         </button>
 
+                        {/* SUBMIT */}
+
                         <button
                             type="submit"
-                            disabled={
-                                loading
-                            }
-                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50"
+                            disabled={loading}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
 
                             {loading
                                 ? "Submitting..."
-                                : role === "admin"
-                                    ? "Create & Assign Job"
-                                    : "Submit for Approval"}
+                                : isAdmin
+                                ? "Create & Assign Job"
+                                : "Submit for Approval"}
 
                         </button>
 
