@@ -8,6 +8,7 @@ import {
   XCircle,
   Search,
   Eye,
+  Trash2,
   X,
   CalendarDays,
   User,
@@ -22,9 +23,9 @@ import CreateJob from "./CreateJob";
 
 const getStoredUser = () => {
   try {
-    const savedUser = localStorage.getItem("currentUser");
+    const savedUser =
+      localStorage.getItem("currentUser");
 
-    // No user found
     if (
       !savedUser ||
       savedUser === "undefined" ||
@@ -33,9 +34,9 @@ const getStoredUser = () => {
       return null;
     }
 
-    const parsedUser = JSON.parse(savedUser);
+    const parsedUser =
+      JSON.parse(savedUser);
 
-    // Make sure object exists
     if (
       !parsedUser ||
       typeof parsedUser !== "object"
@@ -44,7 +45,9 @@ const getStoredUser = () => {
     }
 
     return parsedUser;
+
   } catch (error) {
+
     console.error(
       "User Parse Error:",
       error
@@ -75,7 +78,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
   const [showCreateJob, setShowCreateJob] =
     useState(false);
 
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] =
+    useState([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -124,7 +128,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
       console.error(
         "❌ User not found in props or localStorage"
       );
-
     }
 
   }, [propUser]);
@@ -268,9 +271,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
     } finally {
 
       setLoading(false);
-
     }
-
   };
 
   // =====================================================
@@ -286,13 +287,12 @@ const EmployeeDashboard = ({ user: propUser }) => {
     } else {
 
       setLoading(false);
-
     }
 
   }, [employeeId]);
 
   // =====================================================
-  // REFRESH WHEN JOB CREATED / UPDATED
+  // REFRESH WHEN JOB CREATED / UPDATED / DELETED
   // =====================================================
 
   useEffect(() => {
@@ -304,7 +304,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
       );
 
       fetchJobs();
-
     };
 
     window.addEventListener(
@@ -318,7 +317,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
         "jobsUpdated",
         handleJobsUpdate
       );
-
     };
 
   }, [employeeId]);
@@ -334,9 +332,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
       if (employeeId) {
 
         fetchJobs();
-
       }
-
     };
 
     window.addEventListener(
@@ -350,7 +346,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
         "focus",
         handleFocus
       );
-
     };
 
   }, [employeeId]);
@@ -379,7 +374,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
     ) {
 
       return "approved";
-
     }
 
     // REJECTED
@@ -390,13 +384,11 @@ const EmployeeDashboard = ({ user: propUser }) => {
     ) {
 
       return "rejected";
-
     }
 
     // DEFAULT
 
     return "pending";
-
   };
 
   // =====================================================
@@ -464,7 +456,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
         matchesSearch &&
         matchesStatus
       );
-
     });
 
   // =====================================================
@@ -476,7 +467,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
     if (!date) {
 
       return "N/A";
-
     }
 
     try {
@@ -495,9 +485,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
     } catch (error) {
 
       return "N/A";
-
     }
-
   };
 
   // =====================================================
@@ -522,9 +510,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
           Accepted
 
         </span>
-
       );
-
     }
 
     // REJECTED
@@ -540,9 +526,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
           Rejected
 
         </span>
-
       );
-
     }
 
     // PENDING
@@ -556,9 +540,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
         Pending
 
       </span>
-
     );
-
   };
 
   // =====================================================
@@ -569,9 +551,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
     setShowCreateJob(false);
 
-    // Reload jobs
     fetchJobs();
-
   };
 
   // =====================================================
@@ -581,7 +561,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
   const handleViewJob = (job) => {
 
     setSelectedJob(job);
-
   };
 
   // =====================================================
@@ -591,7 +570,178 @@ const EmployeeDashboard = ({ user: propUser }) => {
   const closeViewModal = () => {
 
     setSelectedJob(null);
+  };
 
+  // =====================================================
+  // DELETE JOB
+  // =====================================================
+
+  const handleDeleteJob = (job) => {
+
+    if (!job) {
+      return;
+    }
+
+    const jobTitle =
+      job?.jobTitle ||
+      "this job";
+
+    // -----------------------------------------------
+    // CONFIRM DELETE
+    // -----------------------------------------------
+
+    const confirmDelete =
+      window.confirm(
+        `Are you sure you want to delete "${jobTitle}"?`
+      );
+
+    if (!confirmDelete) {
+
+      return;
+    }
+
+    try {
+
+      // -----------------------------------------------
+      // GET ALL JOBS
+      // -----------------------------------------------
+
+      const savedJobs =
+        localStorage.getItem("jobs");
+
+      if (
+        !savedJobs ||
+        savedJobs === "undefined" ||
+        savedJobs === "null"
+      ) {
+
+        return;
+      }
+
+      const allJobs =
+        JSON.parse(savedJobs);
+
+      if (!Array.isArray(allJobs)) {
+
+        return;
+      }
+
+      // -----------------------------------------------
+      // IDENTIFY JOB
+      // -----------------------------------------------
+
+      const selectedJobId =
+        job?._id ||
+        job?.id;
+
+      // -----------------------------------------------
+      // DELETE ONLY SELECTED JOB
+      // -----------------------------------------------
+
+      let updatedJobs;
+
+      if (selectedJobId) {
+
+        updatedJobs =
+          allJobs.filter(
+            (item) =>
+              String(
+                item?._id ||
+                item?.id
+              ) !==
+              String(selectedJobId)
+          );
+
+      } else {
+
+        /*
+         * Fallback for old jobs which
+         * don't have id/_id.
+         */
+
+        updatedJobs =
+          allJobs.filter(
+            (item) => {
+
+              return !(
+                String(
+                  item?.createdBy
+                ) ===
+                  String(
+                    job?.createdBy
+                  ) &&
+
+                String(
+                  item?.projectId
+                ) ===
+                  String(
+                    job?.projectId
+                  ) &&
+
+                String(
+                  item?.jobTitle
+                ) ===
+                  String(
+                    job?.jobTitle
+                  )
+              );
+            }
+          );
+      }
+
+      // -----------------------------------------------
+      // SAVE UPDATED JOBS
+      // -----------------------------------------------
+
+      localStorage.setItem(
+        "jobs",
+        JSON.stringify(updatedJobs)
+      );
+
+      // -----------------------------------------------
+      // UPDATE UI IMMEDIATELY
+      // -----------------------------------------------
+
+      setJobs(
+        updatedJobs.filter(
+          (item) =>
+            String(
+              item?.createdBy
+            ) ===
+            String(employeeId)
+        )
+      );
+
+      // -----------------------------------------------
+      // CLOSE VIEW POPUP
+      // -----------------------------------------------
+
+      setSelectedJob(null);
+
+      // -----------------------------------------------
+      // NOTIFY OTHER COMPONENTS
+      // -----------------------------------------------
+
+      window.dispatchEvent(
+        new Event("jobsUpdated")
+      );
+
+      console.log(
+        "✅ Job deleted successfully:",
+        jobTitle
+      );
+
+    } catch (error) {
+
+      console.error(
+        "❌ Delete Job Error:",
+        error
+      );
+
+      alert(
+        "Failed to delete job. Please try again."
+      );
+    }
   };
 
   // =====================================================
@@ -650,9 +800,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
           </div>
 
-          {/* =================================================
-              CREATE JOB BUTTON
-          ================================================= */}
+          {/* CREATE JOB BUTTON */}
 
           <button
             type="button"
@@ -895,9 +1043,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
           ) : filteredJobs.length === 0 ? (
 
-            /* =================================================
-               EMPTY
-            ================================================= */
+            /* EMPTY */
 
             <div className="p-10 text-center">
 
@@ -930,13 +1076,11 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
           ) : (
 
-            /* =================================================
-               TABLE
-            ================================================= */
+            /* TABLE */
 
             <div className="overflow-x-auto">
 
-              <table className="w-full min-w-[1000px]">
+              <table className="w-full min-w-[1100px]">
 
                 <thead className="bg-slate-50 border-b border-slate-200">
 
@@ -1015,8 +1159,10 @@ const EmployeeDashboard = ({ user: propUser }) => {
                               <div>
 
                                 <p className="font-semibold text-slate-800">
+
                                   {job.jobTitle ||
                                     "Untitled Job"}
+
                                 </p>
 
                                 <p className="text-xs text-slate-400 mt-1">
@@ -1132,7 +1278,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
                                   {job.rejectionReason}
 
                                 </p>
-
                               )}
 
                           </td>
@@ -1141,28 +1286,52 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
                           <td className="px-5 py-5 text-center">
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleViewJob(
-                                  job
-                                )
-                              }
-                              className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition"
-                            >
+                            <div className="flex items-center justify-center gap-2">
 
-                              <Eye size={16} />
+                              {/* VIEW */}
 
-                              View
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleViewJob(
+                                    job
+                                  )
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition"
+                                title="View Job"
+                              >
 
-                            </button>
+                                <Eye size={16} />
+
+                                View
+
+                              </button>
+
+                              {/* DELETE */}
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeleteJob(
+                                    job
+                                  )
+                                }
+                                className="w-9 h-9 inline-flex items-center justify-center bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                                title="Delete Job"
+                              >
+
+                                <Trash2
+                                  size={17}
+                                />
+
+                              </button>
+
+                            </div>
 
                           </td>
 
                         </tr>
-
                       );
-
                     }
                   )}
 
@@ -1171,7 +1340,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
               </table>
 
             </div>
-
           )}
 
         </div>
@@ -1198,7 +1366,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
           </div>
 
         </div>
-
       )}
 
       {/* =====================================================
@@ -1207,13 +1374,30 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
       {selectedJob && (
 
-        <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
+          onMouseDown={(e) => {
 
-          <div className="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl">
+            if (
+              e.target ===
+              e.currentTarget
+            ) {
+              closeViewModal();
+            }
+
+          }}
+        >
+
+          <div
+            className="bg-white w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl"
+            onMouseDown={(e) =>
+              e.stopPropagation()
+            }
+          >
 
             {/* MODAL HEADER */}
 
-            <div className="flex items-center justify-between p-5 border-b">
+            <div className="sticky top-0 z-10 bg-white flex items-center justify-between p-5 border-b">
 
               <div>
 
@@ -1233,6 +1417,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                   closeViewModal
                 }
                 className="p-2 rounded-lg hover:bg-slate-100 text-slate-500"
+                title="Close"
               >
 
                 <X size={22} />
@@ -1266,6 +1451,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+                {/* PROJECT ID */}
+
                 <div className="bg-slate-50 rounded-lg p-4">
 
                   <p className="text-xs text-slate-500">
@@ -1281,6 +1468,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
                 </div>
 
+                {/* JOB TYPE */}
+
                 <div className="bg-slate-50 rounded-lg p-4">
 
                   <p className="text-xs text-slate-500">
@@ -1295,6 +1484,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
                   </p>
 
                 </div>
+
+                {/* TOTAL HOURS */}
 
                 <div className="bg-slate-50 rounded-lg p-4">
 
@@ -1312,6 +1503,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
                 </div>
 
+                {/* EMPLOYEE ID */}
+
                 <div className="bg-slate-50 rounded-lg p-4">
 
                   <p className="text-xs text-slate-500">
@@ -1326,6 +1519,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
                   </p>
 
                 </div>
+
+                {/* START DATE */}
 
                 <div className="bg-slate-50 rounded-lg p-4">
 
@@ -1342,6 +1537,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
                   </p>
 
                 </div>
+
+                {/* DUE DATE */}
 
                 <div className="bg-slate-50 rounded-lg p-4">
 
@@ -1449,7 +1646,9 @@ const EmployeeDashboard = ({ user: propUser }) => {
                             ) => (
 
                               <tr
-                                key={index}
+                                key={
+                                  index
+                                }
                               >
 
                                 <td className="px-4 py-3 text-sm text-slate-700">
@@ -1468,7 +1667,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
                                 </td>
 
                               </tr>
-
                             )
                           )}
 
@@ -1479,7 +1677,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
                     </div>
 
                   </div>
-
                 )}
 
               {/* REJECTION REASON */}
@@ -1504,14 +1701,15 @@ const EmployeeDashboard = ({ user: propUser }) => {
                     </p>
 
                   </div>
-
                 )}
 
             </div>
 
             {/* MODAL FOOTER */}
 
-            <div className="flex justify-end p-5 border-t">
+            <div className="flex justify-end gap-3 p-5 border-t">
+
+              {/* CLOSE */}
 
               <button
                 type="button"
@@ -1523,16 +1721,32 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 Close
               </button>
 
+              {/* DELETE */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleDeleteJob(
+                    selectedJob
+                  )
+                }
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
+              >
+
+                <Trash2 size={17} />
+
+                Delete Job
+
+              </button>
+
             </div>
 
           </div>
 
         </div>
-
       )}
 
     </div>
-
   );
 };
 
