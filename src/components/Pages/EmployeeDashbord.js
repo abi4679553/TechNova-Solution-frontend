@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import CreateJob from "./CreateJob";
+import { getEmployeeJobs, deleteJob, } from "../../components/Services/Api";
 
 // =====================================================
 // GET USER SAFELY FROM LOCAL STORAGE
@@ -168,108 +169,42 @@ const EmployeeDashboard = ({ user: propUser }) => {
   // LOAD JOBS FROM LOCAL STORAGE
   // =====================================================
 
-  const fetchJobs = () => {
-
+  const fetchJobs = async () => {
     try {
-
       setLoading(true);
 
-      // -----------------------------------------------
-      // USER ID CHECK
-      // -----------------------------------------------
-
+      // Employee ID check
       if (!employeeId) {
-
-        console.log(
-          "Employee ID not available"
-        );
-
+        console.log("Employee ID not available");
         setJobs([]);
-
         return;
       }
 
-      // -----------------------------------------------
-      // GET JOBS
-      // -----------------------------------------------
+      console.log("Fetching jobs from backend...");
+      console.log("Employee ID:", employeeId);
 
-      const savedJobs =
-        localStorage.getItem("jobs");
+      // Get jobs from backend
+      const data = await getEmployeeJobs(employeeId);
 
-      if (
-        !savedJobs ||
-        savedJobs === "undefined" ||
-        savedJobs === "null"
-      ) {
+      console.log("Backend Jobs Response:", data);
 
+      if (data?.success && Array.isArray(data?.jobs)) {
+        setJobs(data.jobs);
+
+        console.log("Employee Jobs:", data.jobs);
+      } else {
         setJobs([]);
-
-        return;
+        console.log("No jobs found");
       }
-
-      // -----------------------------------------------
-      // PARSE JOBS
-      // -----------------------------------------------
-
-      let parsedJobs;
-
-      try {
-
-        parsedJobs =
-          JSON.parse(savedJobs);
-
-      } catch (error) {
-
-        console.error(
-          "Jobs JSON Parse Error:",
-          error
-        );
-
-        setJobs([]);
-
-        return;
-      }
-
-      // -----------------------------------------------
-      // ARRAY CHECK
-      // -----------------------------------------------
-
-      if (!Array.isArray(parsedJobs)) {
-
-        setJobs([]);
-
-        return;
-      }
-
-      // -----------------------------------------------
-      // EMPLOYEE JOBS
-      // -----------------------------------------------
-
-      const employeeJobs =
-        parsedJobs.filter(
-          (job) =>
-            String(job?.createdBy) ===
-            String(employeeId)
-        );
-
-      console.log(
-        "Employee Jobs:",
-        employeeJobs
-      );
-
-      setJobs(employeeJobs);
-
     } catch (error) {
-
-      console.error(
-        "Fetch Jobs Error:",
-        error
-      );
+      console.error("Fetch Jobs Error:", error);
 
       setJobs([]);
 
+      alert(
+        error.message || "Failed to fetch jobs from server"
+      );
     } finally {
-
       setLoading(false);
     }
   };
@@ -576,169 +511,65 @@ const EmployeeDashboard = ({ user: propUser }) => {
   // DELETE JOB
   // =====================================================
 
-  const handleDeleteJob = (job) => {
-
+  const handleDeleteJob = async (job) => {
     if (!job) {
       return;
     }
 
-    const jobTitle =
-      job?.jobTitle ||
-      "this job";
+    const jobTitle = job?.jobTitle || "this job";
 
-    // -----------------------------------------------
-    // CONFIRM DELETE
-    // -----------------------------------------------
-
-    const confirmDelete =
-      window.confirm(
-        `Are you sure you want to delete "${jobTitle}"?`
-      );
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${jobTitle}"?`
+    );
 
     if (!confirmDelete) {
-
       return;
     }
 
     try {
+      const selectedJobId = job?._id || job?.id;
 
-      // -----------------------------------------------
-      // GET ALL JOBS
-      // -----------------------------------------------
-
-      const savedJobs =
-        localStorage.getItem("jobs");
-
-      if (
-        !savedJobs ||
-        savedJobs === "undefined" ||
-        savedJobs === "null"
-      ) {
-
+      if (!selectedJobId) {
+        alert("Job ID not found");
         return;
       }
 
-      const allJobs =
-        JSON.parse(savedJobs);
+      console.log("Deleting Job:", selectedJobId);
 
-      if (!Array.isArray(allJobs)) {
+      const data = await deleteJob(selectedJobId);
 
-        return;
-      }
+      console.log("Delete Response:", data);
 
-      // -----------------------------------------------
-      // IDENTIFY JOB
-      // -----------------------------------------------
-
-      const selectedJobId =
-        job?._id ||
-        job?.id;
-
-      // -----------------------------------------------
-      // DELETE ONLY SELECTED JOB
-      // -----------------------------------------------
-
-      let updatedJobs;
-
-      if (selectedJobId) {
-
-        updatedJobs =
-          allJobs.filter(
+      if (data?.success) {
+        // Remove from UI immediately
+        setJobs((prevJobs) =>
+          prevJobs.filter(
             (item) =>
-              String(
-                item?._id ||
-                item?.id
-              ) !==
+              String(item?._id || item?.id) !==
               String(selectedJobId)
-          );
+          )
+        );
 
+        // Close view popup
+        setSelectedJob(null);
+
+        // Refresh jobs from backend
+        await fetchJobs();
+
+        console.log(
+          "✅ Job deleted successfully:",
+          jobTitle
+        );
       } else {
-
-        /*
-         * Fallback for old jobs which
-         * don't have id/_id.
-         */
-
-        updatedJobs =
-          allJobs.filter(
-            (item) => {
-
-              return !(
-                String(
-                  item?.createdBy
-                ) ===
-                  String(
-                    job?.createdBy
-                  ) &&
-
-                String(
-                  item?.projectId
-                ) ===
-                  String(
-                    job?.projectId
-                  ) &&
-
-                String(
-                  item?.jobTitle
-                ) ===
-                  String(
-                    job?.jobTitle
-                  )
-              );
-            }
-          );
+        alert(
+          data?.message || "Failed to delete job"
+        );
       }
-
-      // -----------------------------------------------
-      // SAVE UPDATED JOBS
-      // -----------------------------------------------
-
-      localStorage.setItem(
-        "jobs",
-        JSON.stringify(updatedJobs)
-      );
-
-      // -----------------------------------------------
-      // UPDATE UI IMMEDIATELY
-      // -----------------------------------------------
-
-      setJobs(
-        updatedJobs.filter(
-          (item) =>
-            String(
-              item?.createdBy
-            ) ===
-            String(employeeId)
-        )
-      );
-
-      // -----------------------------------------------
-      // CLOSE VIEW POPUP
-      // -----------------------------------------------
-
-      setSelectedJob(null);
-
-      // -----------------------------------------------
-      // NOTIFY OTHER COMPONENTS
-      // -----------------------------------------------
-
-      window.dispatchEvent(
-        new Event("jobsUpdated")
-      );
-
-      console.log(
-        "✅ Job deleted successfully:",
-        jobTitle
-      );
-
     } catch (error) {
-
-      console.error(
-        "❌ Delete Job Error:",
-        error
-      );
+      console.error("❌ Delete Job Error:", error);
 
       alert(
+        error.message ||
         "Failed to delete job. Please try again."
       );
     }
@@ -1609,7 +1440,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 selectedJob.tasks
               ) &&
                 selectedJob.tasks.length >
-                  0 && (
+                0 && (
 
                   <div className="mt-6">
 

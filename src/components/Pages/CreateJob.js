@@ -1,10 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+
 import {
     ArrowLeft,
     Plus,
     Trash2,
 } from "lucide-react";
+
+import {
+    createJob,
+    getAllEmployees,
+} from "../../components/Services/Api";
 
 // =====================================================
 // SAFE LOCAL STORAGE USER
@@ -41,7 +47,6 @@ const getStoredUser = () => {
 
 const CreateJob = ({ user: propUser, onClose }) => {
     const navigate = useNavigate();
-    const location = useLocation();
 
     // =====================================================
     // USER
@@ -84,14 +89,17 @@ const CreateJob = ({ user: propUser, onClose }) => {
     // =====================================================
 
     const [employees, setEmployees] = useState([]);
-
-    const [selectedEmployees, setSelectedEmployees] =
-        useState([]);
-
-    const [loading, setLoading] = useState(false);
+    const [selectedEmployees, setSelectedEmployees] = useState([]);
 
     // =====================================================
-    // GET CURRENT USER
+    // LOADING
+    // =====================================================
+
+    const [loading, setLoading] = useState(false);
+    const [employeeLoading, setEmployeeLoading] = useState(false);
+
+    // =====================================================
+    // UPDATE USER
     // =====================================================
 
     useEffect(() => {
@@ -100,21 +108,17 @@ const CreateJob = ({ user: propUser, onClose }) => {
 
             console.log("Current User:", propUser);
             console.log("Current User ID:", propUser?.Id);
-
-            return;
-        }
-
-        const storedUser = getStoredUser();
-
-        if (storedUser) {
-            setUser(storedUser);
-
-            console.log("Current User:", storedUser);
-            console.log("Current User ID:", storedUser?.Id);
         } else {
-            console.log(
-                "No valid currentUser found in localStorage"
-            );
+            const storedUser = getStoredUser();
+
+            if (storedUser) {
+                setUser(storedUser);
+
+                console.log("Current User:", storedUser);
+                console.log("Current User ID:", storedUser?.Id);
+            } else {
+                console.log("No valid currentUser found");
+            }
         }
     }, [propUser]);
 
@@ -149,134 +153,70 @@ const CreateJob = ({ user: propUser, onClose }) => {
     }, [user, role, isAdmin, isEmployee]);
 
     // =====================================================
-    // LOAD EMPLOYEES
-    // FRONTEND ONLY
+    // GET EMPLOYEES FROM BACKEND
+    // ADMIN ONLY
     // =====================================================
 
     useEffect(() => {
-        if (!isAdmin) {
-            setEmployees([]);
-            return;
-        }
-
-        try {
-            let employeeList = [];
-
-            // -------------------------------------------------
-            // FIRST: employees localStorage
-            // -------------------------------------------------
-
-            const savedEmployees =
-                localStorage.getItem("employees");
-
-            if (
-                savedEmployees &&
-                savedEmployees !== "undefined" &&
-                savedEmployees !== "null"
-            ) {
-                try {
-                    const parsedEmployees =
-                        JSON.parse(savedEmployees);
-
-                    if (Array.isArray(parsedEmployees)) {
-                        employeeList = parsedEmployees;
-                    }
-                } catch (error) {
-                    console.error(
-                        "Employees Parse Error:",
-                        error
-                    );
-                }
+        const fetchEmployees = async () => {
+            // Employee login என்றால் employee list தேவையில்லை
+            if (!isAdmin) {
+                setEmployees([]);
+                return;
             }
 
-            // -------------------------------------------------
-            // SECOND: users localStorage
-            // -------------------------------------------------
+            try {
+                setEmployeeLoading(true);
 
-            if (employeeList.length === 0) {
-                const savedUsers =
-                    localStorage.getItem("users");
+                console.log("================================");
+                console.log("FETCHING EMPLOYEES");
+                console.log("GET /employees");
+                console.log("================================");
+
+                const data = await getAllEmployees();
+
+                console.log("Employees API Response:", data);
 
                 if (
-                    savedUsers &&
-                    savedUsers !== "undefined" &&
-                    savedUsers !== "null"
+                    data?.success &&
+                    Array.isArray(data?.employees)
                 ) {
-                    try {
-                        const parsedUsers =
-                            JSON.parse(savedUsers);
+                    setEmployees(data.employees);
 
-                        if (Array.isArray(parsedUsers)) {
-                            employeeList =
-                                parsedUsers.filter((item) => {
-                                    const itemRole =
-                                        String(
-                                            item?.role || ""
-                                        ).toLowerCase();
+                    console.log(
+                        "Employees Loaded:",
+                        data.employees
+                    );
 
-                                    return (
-                                        itemRole ===
-                                            "employee" ||
-                                        String(
-                                            item?.Id || ""
-                                        )
-                                            .toUpperCase()
-                                            .startsWith("EMP")
-                                    );
-                                });
-                        }
-                    } catch (error) {
-                        console.error(
-                            "Users Parse Error:",
-                            error
-                        );
-                    }
-                }
-            }
+                    console.log(
+                        "Employee Count:",
+                        data.employees.length
+                    );
+                } else {
+                    setEmployees([]);
 
-            // -------------------------------------------------
-            // REMOVE DUPLICATE EMPLOYEE IDs
-            // -------------------------------------------------
-
-            const uniqueEmployees = employeeList.filter(
-                (employee, index, array) => {
-                    const employeeId =
-                        employee?.Id ||
-                        employee?.employeeId ||
-                        employee?.id;
-
-                    if (!employeeId) {
-                        return false;
-                    }
-
-                    return (
-                        index ===
-                        array.findIndex((item) => {
-                            const itemId =
-                                item?.Id ||
-                                item?.employeeId ||
-                                item?.id;
-
-                            return itemId === employeeId;
-                        })
+                    console.log(
+                        "No employees found from backend"
                     );
                 }
-            );
+            } catch (error) {
+                console.error(
+                    "Fetch Employees Error:",
+                    error
+                );
 
-            setEmployees(uniqueEmployees);
+                setEmployees([]);
 
-            console.log(
-                "Employees Loaded For Assign Job:",
-                uniqueEmployees
-            );
-        } catch (error) {
-            console.error(
-                "Employee Load Error:",
-                error
-            );
+                alert(
+                    error.message ||
+                        "Failed to load employees"
+                );
+            } finally {
+                setEmployeeLoading(false);
+            }
+        };
 
-            setEmployees([]);
-        }
+        fetchEmployees();
     }, [isAdmin]);
 
     // =====================================================
@@ -343,7 +283,6 @@ const CreateJob = ({ user: propUser, onClose }) => {
 
     // =====================================================
     // SELECT EMPLOYEE
-    // ADMIN ONLY
     // =====================================================
 
     const handleEmployeeChange = (e) => {
@@ -357,9 +296,7 @@ const CreateJob = ({ user: propUser, onClose }) => {
             return;
         }
 
-        if (
-            !selectedEmployees.includes(employeeId)
-        ) {
+        if (!selectedEmployees.includes(employeeId)) {
             setSelectedEmployees((prev) => [
                 ...prev,
                 employeeId,
@@ -413,16 +350,16 @@ const CreateJob = ({ user: propUser, onClose }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // ===================================================
-        // GET CURRENT USER
-        // ===================================================
+        // =================================================
+        // CURRENT USER
+        // =================================================
 
         const currentUser =
             user || getStoredUser();
 
-        // ===================================================
+        // =================================================
         // USER VALIDATION
-        // ===================================================
+        // =================================================
 
         if (!currentUser?.Id) {
             alert(
@@ -447,54 +384,54 @@ const CreateJob = ({ user: propUser, onClose }) => {
             role
         );
 
-        // ===================================================
+        // =================================================
         // PROJECT ID
-        // ===================================================
+        // =================================================
 
         if (!formData.projectId.trim()) {
             alert("Please enter Project ID");
             return;
         }
 
-        // ===================================================
+        // =================================================
         // JOB TITLE
-        // ===================================================
+        // =================================================
 
         if (!formData.jobTitle.trim()) {
             alert("Please enter Job Title");
             return;
         }
 
-        // ===================================================
+        // =================================================
         // DESCRIPTION
-        // ===================================================
+        // =================================================
 
         if (!formData.description.trim()) {
             alert("Please enter Job Description");
             return;
         }
 
-        // ===================================================
+        // =================================================
         // START DATE
-        // ===================================================
+        // =================================================
 
         if (!formData.startDate) {
             alert("Please select Start Date");
             return;
         }
 
-        // ===================================================
+        // =================================================
         // DUE DATE
-        // ===================================================
+        // =================================================
 
         if (!formData.deadline) {
             alert("Please select Due Date");
             return;
         }
 
-        // ===================================================
+        // =================================================
         // DATE VALIDATION
-        // ===================================================
+        // =================================================
 
         if (
             new Date(formData.deadline) <
@@ -507,9 +444,9 @@ const CreateJob = ({ user: propUser, onClose }) => {
             return;
         }
 
-        // ===================================================
+        // =================================================
         // ADMIN EMPLOYEE VALIDATION
-        // ===================================================
+        // =================================================
 
         if (
             isAdmin &&
@@ -522,9 +459,9 @@ const CreateJob = ({ user: propUser, onClose }) => {
             return;
         }
 
-        // ===================================================
+        // =================================================
         // VALID TASKS
-        // ===================================================
+        // =================================================
 
         const validTasks = tasks.filter(
             (task) =>
@@ -540,33 +477,19 @@ const CreateJob = ({ user: propUser, onClose }) => {
             return;
         }
 
-        // ===================================================
-        // ADMIN ASSIGNMENT
-        // ===================================================
+        // =================================================
+        // ASSIGNED EMPLOYEES
+        // =================================================
 
         const assignedEmployees = isAdmin
             ? selectedEmployees
             : [];
 
-        // ===================================================
-        // JOB STATUS
-        // ===================================================
-
-        const initialStatus = isAdmin
-            ? "approved"
-            : "pending";
-
-        const initialApprovalStatus = isAdmin
-            ? "approved"
-            : "pending";
-
-        // ===================================================
+        // =================================================
         // JOB DATA
-        // ===================================================
+        // =================================================
 
         const jobData = {
-            id: Date.now(),
-
             projectId:
                 formData.projectId.trim(),
 
@@ -579,17 +502,9 @@ const CreateJob = ({ user: propUser, onClose }) => {
             jobDescription:
                 formData.description.trim(),
 
-            // AUTOMATIC USER ID
             createdBy:
                 currentUser.Id,
 
-            // AUTOMATIC USER NAME
-            createdByName:
-                currentUser.fullName ||
-                currentUser.name ||
-                "User",
-
-            // AUTOMATIC ROLE
             createdByRole:
                 role,
 
@@ -611,239 +526,44 @@ const CreateJob = ({ user: propUser, onClose }) => {
             totalHours:
                 totalHours,
 
-            // ADMIN ONLY
             assignedEmployees:
                 assignedEmployees,
-
-            // STATUS
-            status:
-                initialStatus,
-
-            // APPROVAL STATUS
-            approvalStatus:
-                initialApprovalStatus,
-
-            // CREATED DATE
-            createdAt:
-                new Date().toISOString(),
         };
 
-        console.log(
-            "Final Job Data:",
-            jobData
-        );
+        console.log("================================");
+        console.log("SENDING JOB TO BACKEND");
+        console.log("JOB DATA:", jobData);
+        console.log("================================");
 
-        // ===================================================
-        // SAVE JOB
-        // ===================================================
+        // =================================================
+        // SAVE TO BACKEND
+        // =================================================
 
         try {
             setLoading(true);
 
-            // ================================================
-            // GET EXISTING JOBS
-            // ================================================
-
-            let existingJobs = [];
-
-            const savedJobs =
-                localStorage.getItem("jobs");
-
-            if (
-                savedJobs &&
-                savedJobs !== "undefined" &&
-                savedJobs !== "null"
-            ) {
-                try {
-                    const parsedJobs =
-                        JSON.parse(savedJobs);
-
-                    if (Array.isArray(parsedJobs)) {
-                        existingJobs = parsedJobs;
-                    }
-                } catch (error) {
-                    console.error(
-                        "Jobs Parse Error:",
-                        error
-                    );
-
-                    existingJobs = [];
-                }
-            }
-
-            // ================================================
-            // ADD NEW JOB
-            // ================================================
-
-            const updatedJobs = [
-                jobData,
-                ...existingJobs,
-            ];
-
-            // ================================================
-            // SAVE JOBS
-            // ================================================
-
-            localStorage.setItem(
-                "jobs",
-                JSON.stringify(updatedJobs)
-            );
+            const response =
+                await createJob(jobData);
 
             console.log(
-                "Job Saved Successfully:",
-                jobData
+                "Backend Create Job Response:",
+                response
             );
 
-            // ================================================
-            // EMPLOYEE → ADMIN NOTIFICATION
-            // ================================================
-
-            if (isEmployee) {
-                const notification = {
-                    id: Date.now().toString(),
-
-                    type: "job-approval",
-
-                    title:
-                        "New Job Approval Request",
-
-                    message:
-                        `${currentUser.Id} - ${
-                            currentUser.fullName ||
-                            "Employee"
-                        } submitted a new job for approval.`,
-
-                    employeeId:
-                        currentUser.Id,
-
-                    employeeName:
-                        currentUser.fullName ||
-                        "Employee",
-
-                    projectId:
-                        formData.projectId.trim(),
-
-                    jobTitle:
-                        formData.jobTitle.trim(),
-
-                    jobDescription:
-                        formData.description.trim(),
-
-                    jobType:
-                        formData.jobType,
-
-                    startDate:
-                        formData.startDate,
-
-                    dueDate:
-                        formData.deadline,
-
-                    tasks:
-                        validTasks.map((task) => ({
-                            taskName:
-                                task.taskName.trim(),
-
-                            hours:
-                                Number(task.hours),
-                        })),
-
-                    totalHours:
-                        totalHours,
-
-                    status: "pending",
-
-                    approvalStatus:
-                        "pending",
-
-                    isRead: false,
-
-                    createdAt:
-                        new Date().toISOString(),
-                };
-
-                // ==============================================
-                // GET OLD NOTIFICATIONS
-                // ==============================================
-
-                let existingNotifications = [];
-
-                const savedNotifications =
-                    localStorage.getItem(
-                        "adminNotifications"
-                    );
-
-                if (
-                    savedNotifications &&
-                    savedNotifications !== "undefined" &&
-                    savedNotifications !== "null"
-                ) {
-                    try {
-                        const parsedNotifications =
-                            JSON.parse(
-                                savedNotifications
-                            );
-
-                        if (
-                            Array.isArray(
-                                parsedNotifications
-                            )
-                        ) {
-                            existingNotifications =
-                                parsedNotifications;
-                        }
-                    } catch (error) {
-                        console.error(
-                            "Notification Parse Error:",
-                            error
-                        );
-
-                        existingNotifications = [];
-                    }
-                }
-
-                // ==============================================
-                // SAVE NOTIFICATION
-                // ==============================================
-
-                const updatedNotifications = [
-                    notification,
-                    ...existingNotifications,
-                ];
-
-                localStorage.setItem(
-                    "adminNotifications",
-                    JSON.stringify(
-                        updatedNotifications
-                    )
-                );
-
-                console.log(
-                    "Admin Notification Saved:",
-                    notification
-                );
-
-                // ==============================================
-                // ADMIN NOTIFICATION UPDATE
-                // ==============================================
-
-                window.dispatchEvent(
-                    new Event(
-                        "adminNotificationsUpdated"
-                    )
+            if (!response?.success) {
+                throw new Error(
+                    response?.message ||
+                        "Failed to create job"
                 );
             }
 
-            // ================================================
-            // JOB UPDATE EVENT
-            // ================================================
-
-            window.dispatchEvent(
-                new Event("jobsUpdated")
+            console.log(
+                "✅ Job saved successfully in MongoDB"
             );
 
-            // ================================================
+            // =================================================
             // SUCCESS MESSAGE
-            // ================================================
+            // =================================================
 
             if (isAdmin) {
                 alert(
@@ -855,9 +575,17 @@ const CreateJob = ({ user: propUser, onClose }) => {
                 );
             }
 
-            // ================================================
-            // CLOSE / NAVIGATION
-            // ================================================
+            // =================================================
+            // UPDATE EVENT
+            // =================================================
+
+            window.dispatchEvent(
+                new Event("jobsUpdated")
+            );
+
+            // =================================================
+            // NAVIGATION
+            // =================================================
 
             if (onClose) {
                 onClose();
@@ -868,12 +596,13 @@ const CreateJob = ({ user: propUser, onClose }) => {
             }
         } catch (error) {
             console.error(
-                "Create Job Error:",
+                "❌ Create Job Error:",
                 error
             );
 
             alert(
-                "Failed to save job."
+                error.message ||
+                    "Failed to create job. Please try again."
             );
         } finally {
             setLoading(false);
@@ -904,6 +633,7 @@ const CreateJob = ({ user: propUser, onClose }) => {
                     </button>
 
                     <div>
+
                         <h1 className="text-3xl font-bold text-gray-800">
                             Create Job
                         </h1>
@@ -913,6 +643,7 @@ const CreateJob = ({ user: propUser, onClose }) => {
                                 ? "Create and assign a job to employees"
                                 : "Create and submit a job for admin approval"}
                         </p>
+
                     </div>
 
                 </div>
@@ -1225,7 +956,6 @@ const CreateJob = ({ user: propUser, onClose }) => {
                                         </button>
 
                                     </div>
-
                                 )
                             )}
 
@@ -1265,23 +995,32 @@ const CreateJob = ({ user: propUser, onClose }) => {
                             <select
                                 value=""
                                 onChange={handleEmployeeChange}
-                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none bg-white focus:ring-2 focus:ring-blue-500"
+                                disabled={employeeLoading}
+                                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none bg-white focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                             >
 
                                 <option value="">
-                                    Select Employee ID
+                                    {employeeLoading
+                                        ? "Loading Employees..."
+                                        : "Select Employee ID"}
                                 </option>
 
-                                {employees.length === 0 ? (
+                                {!employeeLoading &&
+                                    employees.length === 0 && (
+                                        <option
+                                            value=""
+                                            disabled
+                                        >
+                                            No employees available
+                                        </option>
+                                    )}
 
-                                    <option value="" disabled>
-                                        No employees available
-                                    </option>
-
-                                ) : (
-
+                                {!employeeLoading &&
                                     employees.map(
-                                        (employee, index) => {
+                                        (
+                                            employee,
+                                            index
+                                        ) => {
 
                                             const employeeId =
                                                 employee?.Id ||
@@ -1304,35 +1043,47 @@ const CreateJob = ({ user: propUser, onClose }) => {
                                                         employeeId ||
                                                         index
                                                     }
-                                                    value={employeeId}
+                                                    value={
+                                                        employeeId
+                                                    }
                                                 >
-                                                    {employeeId} -{" "}
-                                                    {employeeName}
+                                                    {
+                                                        employeeId
+                                                    }{" "}
+                                                    -{" "}
+                                                    {
+                                                        employeeName
+                                                    }
                                                 </option>
                                             );
                                         }
-                                    )
-
-                                )}
+                                    )}
 
                             </select>
 
                             {/* SELECTED EMPLOYEES */}
 
-                            {selectedEmployees.length > 0 && (
+                            {selectedEmployees.length >
+                                0 && (
 
                                 <div className="mt-4 space-y-2">
 
                                     {selectedEmployees.map(
-                                        (employeeId) => (
+                                        (
+                                            employeeId
+                                        ) => (
 
                                             <div
-                                                key={employeeId}
+                                                key={
+                                                    employeeId
+                                                }
                                                 className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-3"
                                             >
 
                                                 <span className="font-medium text-blue-700">
-                                                    {employeeId}
+                                                    {
+                                                        employeeId
+                                                    }
                                                 </span>
 
                                                 <button
@@ -1344,7 +1095,11 @@ const CreateJob = ({ user: propUser, onClose }) => {
                                                     }
                                                     className="text-red-500 hover:text-red-700"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    <Trash2
+                                                        size={
+                                                            18
+                                                        }
+                                                    />
                                                 </button>
 
                                             </div>
@@ -1353,11 +1108,9 @@ const CreateJob = ({ user: propUser, onClose }) => {
                                     )}
 
                                 </div>
-
                             )}
 
                         </div>
-
                     )}
 
                     {/* =================================================
@@ -1403,13 +1156,11 @@ const CreateJob = ({ user: propUser, onClose }) => {
                             disabled={loading}
                             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-
                             {loading
                                 ? "Submitting..."
                                 : isAdmin
                                 ? "Create & Assign Job"
                                 : "Submit for Approval"}
-
                         </button>
 
                     </div>
