@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Plus,
@@ -16,7 +20,10 @@ import {
 } from "lucide-react";
 
 import CreateJob from "./CreateJob";
-import { getEmployeeJobs, deleteJob, } from "../../components/Services/Api";
+import {
+  getEmployeeJobs,
+  deleteJob,
+} from "../../components/Services/Api";
 
 // =====================================================
 // GET USER SAFELY FROM LOCAL STORAGE
@@ -46,9 +53,7 @@ const getStoredUser = () => {
     }
 
     return parsedUser;
-
   } catch (error) {
-
     console.error(
       "User Parse Error:",
       error
@@ -62,19 +67,20 @@ const getStoredUser = () => {
 // EMPLOYEE DASHBOARD
 // =====================================================
 
-const EmployeeDashboard = ({ user: propUser }) => {
-
-  // =====================================================
+const EmployeeDashboard = ({
+  user: propUser,
+}) => {
+  // ===================================================
   // USER
-  // =====================================================
+  // ===================================================
 
   const [user, setUser] = useState(() => {
     return propUser || getStoredUser();
   });
 
-  // =====================================================
+  // ===================================================
   // STATES
-  // =====================================================
+  // ===================================================
 
   const [showCreateJob, setShowCreateJob] =
     useState(false);
@@ -94,14 +100,12 @@ const EmployeeDashboard = ({ user: propUser }) => {
   const [selectedJob, setSelectedJob] =
     useState(null);
 
-  // =====================================================
+  // ===================================================
   // UPDATE USER
-  // =====================================================
+  // ===================================================
 
   useEffect(() => {
-
     if (propUser) {
-
       setUser(propUser);
 
       console.log(
@@ -116,35 +120,33 @@ const EmployeeDashboard = ({ user: propUser }) => {
       getStoredUser();
 
     if (storedUser) {
-
       setUser(storedUser);
 
       console.log(
         "Dashboard User from LocalStorage:",
         storedUser
       );
-
     } else {
-
       console.error(
-        "❌ User not found in props or localStorage"
+        "User not found in props or localStorage"
       );
     }
-
   }, [propUser]);
 
-  // =====================================================
+  // ===================================================
   // EMPLOYEE ID
-  // =====================================================
+  // ===================================================
 
-  const employeeId = user?.Id;
+  const employeeId =
+    user?.employeeId ||
+    user?.employeeIdNumber ||
+    user?.Id;
 
-  // =====================================================
+  // ===================================================
   // DEBUG USER
-  // =====================================================
+  // ===================================================
 
   useEffect(() => {
-
     console.log(
       "================================"
     );
@@ -162,135 +164,109 @@ const EmployeeDashboard = ({ user: propUser }) => {
     console.log(
       "================================"
     );
-
   }, [user, employeeId]);
 
-  // =====================================================
-  // LOAD JOBS FROM LOCAL STORAGE
-  // =====================================================
+  // ===================================================
+  // LOAD JOBS FROM BACKEND
+  // ===================================================
 
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
 
       // Employee ID check
       if (!employeeId) {
-        console.log("Employee ID not available");
+        console.log(
+          "Employee ID not available"
+        );
+
         setJobs([]);
+
         return;
       }
 
-      console.log("Fetching jobs from backend...");
-      console.log("Employee ID:", employeeId);
+      console.log(
+        "Fetching jobs from backend..."
+      );
+
+      console.log(
+        "Employee ID:",
+        employeeId
+      );
 
       // Get jobs from backend
-      const data = await getEmployeeJobs(employeeId);
+      const data =
+        await getEmployeeJobs(
+          employeeId
+        );
 
-      console.log("Backend Jobs Response:", data);
+      console.log(
+        "Backend Jobs Response:",
+        data
+      );
 
-      if (data?.success && Array.isArray(data?.jobs)) {
+      if (
+        data?.success &&
+        Array.isArray(data?.jobs)
+      ) {
         setJobs(data.jobs);
 
-        console.log("Employee Jobs:", data.jobs);
+        console.log(
+          "Employee Jobs:",
+          data.jobs
+        );
       } else {
         setJobs([]);
-        console.log("No jobs found");
+
+        console.log(
+          "No jobs found"
+        );
       }
     } catch (error) {
-      console.error("Fetch Jobs Error:", error);
+      console.error(
+        "Fetch Jobs Error:",
+        error
+      );
 
       setJobs([]);
-
-      alert(
-        error.message || "Failed to fetch jobs from server"
-      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [employeeId]);
 
-  // =====================================================
+  // ===================================================
   // INITIAL LOAD
-  // =====================================================
+  // ===================================================
 
   useEffect(() => {
-
     if (employeeId) {
-
       fetchJobs();
-
     } else {
-
       setLoading(false);
     }
+  }, [
+    employeeId,
+    fetchJobs,
+  ]);
 
-  }, [employeeId]);
-
-  // =====================================================
+  // ===================================================
   // REFRESH WHEN JOB CREATED / UPDATED / DELETED
-  // =====================================================
+  // ===================================================
 
-  useEffect(() => {
+  // Intentionally disabled to avoid repeated fetches.
+  // Jobs can be refreshed manually when needed.
 
-    const handleJobsUpdate = () => {
-
-      console.log(
-        "Jobs updated - refreshing employee jobs"
-      );
-
-      fetchJobs();
-    };
-
-    window.addEventListener(
-      "jobsUpdated",
-      handleJobsUpdate
-    );
-
-    return () => {
-
-      window.removeEventListener(
-        "jobsUpdated",
-        handleJobsUpdate
-      );
-    };
-
-  }, [employeeId]);
-
-  // =====================================================
+  // ===================================================
   // REFRESH WHEN WINDOW GETS FOCUS
-  // =====================================================
+  // ===================================================
 
-  useEffect(() => {
+  // Intentionally disabled to avoid repeated fetches.
 
-    const handleFocus = () => {
-
-      if (employeeId) {
-
-        fetchJobs();
-      }
-    };
-
-    window.addEventListener(
-      "focus",
-      handleFocus
-    );
-
-    return () => {
-
-      window.removeEventListener(
-        "focus",
-        handleFocus
-      );
-    };
-
-  }, [employeeId]);
-
-  // =====================================================
+  // ===================================================
   // GET JOB STATUS
-  // =====================================================
+  // ===================================================
 
   const getJobStatus = (job) => {
-
     const approvalStatus =
       String(
         job?.approvalStatus || ""
@@ -301,34 +277,31 @@ const EmployeeDashboard = ({ user: propUser }) => {
         job?.status || ""
       ).toLowerCase();
 
-    // APPROVED
-
+    // ACCEPTED
     if (
+      approvalStatus === "accepted" ||
       approvalStatus === "approved" ||
+      status === "accepted" ||
       status === "approved"
     ) {
-
       return "approved";
     }
 
     // REJECTED
-
     if (
       approvalStatus === "rejected" ||
       status === "rejected"
     ) {
-
       return "rejected";
     }
 
     // DEFAULT
-
     return "pending";
   };
 
-  // =====================================================
+  // ===================================================
   // JOB COUNTS
-  // =====================================================
+  // ===================================================
 
   const pendingJobs =
     jobs.filter(
@@ -351,13 +324,12 @@ const EmployeeDashboard = ({ user: propUser }) => {
         "rejected"
     );
 
-  // =====================================================
+  // ===================================================
   // SEARCH + FILTER
-  // =====================================================
+  // ===================================================
 
   const filteredJobs =
     jobs.filter((job) => {
-
       const search =
         searchTerm.toLowerCase();
 
@@ -367,13 +339,11 @@ const EmployeeDashboard = ({ user: propUser }) => {
         )
           .toLowerCase()
           .includes(search) ||
-
         String(
           job?.projectId || ""
         )
           .toLowerCase()
           .includes(search) ||
-
         String(
           job?.jobType || ""
         )
@@ -393,19 +363,16 @@ const EmployeeDashboard = ({ user: propUser }) => {
       );
     });
 
-  // =====================================================
+  // ===================================================
   // DATE FORMAT
-  // =====================================================
+  // ===================================================
 
   const formatDate = (date) => {
-
     if (!date) {
-
       return "N/A";
     }
 
     try {
-
       return new Date(
         date
       ).toLocaleDateString(
@@ -416,144 +383,143 @@ const EmployeeDashboard = ({ user: propUser }) => {
           year: "numeric",
         }
       );
-
     } catch (error) {
-
       return "N/A";
     }
   };
 
-  // =====================================================
+  // ===================================================
   // STATUS BADGE
-  // =====================================================
+  // ===================================================
 
-  const StatusBadge = ({ job }) => {
-
+  const StatusBadge = ({
+    job,
+  }) => {
     const status =
       getJobStatus(job);
 
-    // APPROVED
-
+    // ACCEPTED
     if (status === "approved") {
-
       return (
-
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-
           <CheckCircle size={14} />
-
           Accepted
-
         </span>
       );
     }
 
     // REJECTED
-
     if (status === "rejected") {
-
       return (
-
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-
           <XCircle size={14} />
-
           Rejected
-
         </span>
       );
     }
 
     // PENDING
-
     return (
-
       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
-
         <Clock size={14} />
-
         Pending
-
       </span>
     );
   };
 
-  // =====================================================
+  // ===================================================
   // CREATE JOB CLOSE
-  // =====================================================
+  // ===================================================
 
   const handleCreateJobClose = () => {
-
     setShowCreateJob(false);
 
+    // Refresh once after closing Create Job modal.
     fetchJobs();
   };
 
-  // =====================================================
+  // ===================================================
   // VIEW JOB
-  // =====================================================
+  // ===================================================
 
   const handleViewJob = (job) => {
-
     setSelectedJob(job);
   };
 
-  // =====================================================
+  // ===================================================
   // CLOSE VIEW MODAL
-  // =====================================================
+  // ===================================================
 
   const closeViewModal = () => {
-
     setSelectedJob(null);
   };
 
-  // =====================================================
+  // ===================================================
   // DELETE JOB
-  // =====================================================
+  // ===================================================
 
   const handleDeleteJob = async (job) => {
     if (!job) {
       return;
     }
 
-    const jobTitle = job?.jobTitle || "this job";
+    const jobTitle =
+      job?.jobTitle ||
+      "this job";
 
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${jobTitle}"?`
-    );
+    const confirmDelete =
+      window.confirm(
+        `Are you sure you want to delete "${jobTitle}"?`
+      );
 
     if (!confirmDelete) {
       return;
     }
 
     try {
-      const selectedJobId = job?._id || job?.id;
+      const selectedJobId =
+        job?._id ||
+        job?.id;
 
       if (!selectedJobId) {
-        alert("Job ID not found");
+        alert(
+          "Job ID not found"
+        );
+
         return;
       }
 
-      console.log("Deleting Job:", selectedJobId);
+      console.log(
+        "Deleting Job:",
+        selectedJobId
+      );
 
-      const data = await deleteJob(selectedJobId);
+      const data =
+        await deleteJob(
+          selectedJobId
+        );
 
-      console.log("Delete Response:", data);
+      console.log(
+        "Delete Response:",
+        data
+      );
 
       if (data?.success) {
-        // Remove from UI immediately
         setJobs((prevJobs) =>
           prevJobs.filter(
             (item) =>
-              String(item?._id || item?.id) !==
-              String(selectedJobId)
+              String(
+                item?._id ||
+                item?.id
+              ) !==
+              String(
+                selectedJobId
+              )
           )
         );
 
-        // Close view popup
         setSelectedJob(null);
 
-        // Refresh jobs from backend
         await fetchJobs();
 
         console.log(
@@ -562,27 +528,28 @@ const EmployeeDashboard = ({ user: propUser }) => {
         );
       } else {
         alert(
-          data?.message || "Failed to delete job"
+          data?.message ||
+          "Failed to delete job"
         );
       }
     } catch (error) {
-      console.error("❌ Delete Job Error:", error);
+      console.error(
+        "❌ Delete Job Error:",
+        error
+      );
 
       alert(
-        error.message ||
         "Failed to delete job. Please try again."
       );
     }
   };
 
-  // =====================================================
+  // ===================================================
   // UI
-  // =====================================================
+  // ===================================================
 
   return (
-
     <div className="min-h-screen bg-slate-50 p-4 md:p-6">
-
       <div className="max-w-7xl mx-auto">
 
         {/* =================================================
@@ -592,43 +559,31 @@ const EmployeeDashboard = ({ user: propUser }) => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-8">
 
           <div>
-
             <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
               Employee Dashboard
             </h1>
 
             <p className="text-slate-500 mt-1">
-
               Welcome,{" "}
-
               {user?.fullName ||
                 user?.name ||
                 "Employee"}
-
             </p>
 
             <div className="flex items-center gap-2 mt-2">
-
               <User
                 size={15}
                 className="text-slate-400"
               />
 
               <p className="text-sm text-slate-400">
-
                 Employee ID:{" "}
-
                 <span className="font-semibold text-slate-600">
-
                   {employeeId ||
                     "N/A"}
-
                 </span>
-
               </p>
-
             </div>
-
           </div>
 
           {/* CREATE JOB BUTTON */}
@@ -640,13 +595,9 @@ const EmployeeDashboard = ({ user: propUser }) => {
             }
             className="flex items-center justify-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-700 active:scale-95 transition"
           >
-
             <Plus size={19} />
-
             Create Job
-
           </button>
-
         </div>
 
         {/* =================================================
@@ -658,17 +609,13 @@ const EmployeeDashboard = ({ user: propUser }) => {
           {/* MY JOBS */}
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-
             <div className="flex items-center gap-4">
 
               <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-
                 <Briefcase size={24} />
-
               </div>
 
               <div>
-
                 <p className="text-sm text-slate-500">
                   My Jobs
                 </p>
@@ -676,27 +623,21 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 <p className="text-2xl font-bold text-slate-800">
                   {jobs.length}
                 </p>
-
               </div>
 
             </div>
-
           </div>
 
           {/* PENDING */}
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-
             <div className="flex items-center gap-4">
 
               <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-
                 <Clock size={24} />
-
               </div>
 
               <div>
-
                 <p className="text-sm text-slate-500">
                   Pending Approval
                 </p>
@@ -704,27 +645,21 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 <p className="text-2xl font-bold text-yellow-600">
                   {pendingJobs.length}
                 </p>
-
               </div>
 
             </div>
-
           </div>
 
           {/* ACCEPTED */}
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-
             <div className="flex items-center gap-4">
 
               <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-
                 <CheckCircle size={24} />
-
               </div>
 
               <div>
-
                 <p className="text-sm text-slate-500">
                   Accepted
                 </p>
@@ -732,27 +667,21 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 <p className="text-2xl font-bold text-green-600">
                   {acceptedJobs.length}
                 </p>
-
               </div>
 
             </div>
-
           </div>
 
           {/* REJECTED */}
 
           <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-
             <div className="flex items-center gap-4">
 
               <div className="p-3 bg-red-50 text-red-600 rounded-lg">
-
                 <XCircle size={24} />
-
               </div>
 
               <div>
-
                 <p className="text-sm text-slate-500">
                   Rejected
                 </p>
@@ -760,11 +689,9 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 <p className="text-2xl font-bold text-red-600">
                   {rejectedJobs.length}
                 </p>
-
               </div>
 
             </div>
-
           </div>
 
         </div>
@@ -782,15 +709,13 @@ const EmployeeDashboard = ({ user: propUser }) => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
               <div>
-
                 <h2 className="text-xl font-semibold text-slate-800">
                   My Jobs
                 </h2>
 
                 <p className="text-sm text-slate-500 mt-1">
-                  Jobs created by you and submitted for approval
+                  Jobs assigned to you and jobs created by you
                 </p>
-
               </div>
 
               {/* SEARCH + FILTER */}
@@ -800,7 +725,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 {/* SEARCH */}
 
                 <div className="relative">
-
                   <Search
                     size={18}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -817,7 +741,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
                     placeholder="Search jobs..."
                     className="w-full sm:w-64 border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-
                 </div>
 
                 {/* STATUS FILTER */}
@@ -831,7 +754,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
                   }
                   className="border border-slate-300 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 >
-
                   <option value="all">
                     All Status
                   </option>
@@ -847,13 +769,10 @@ const EmployeeDashboard = ({ user: propUser }) => {
                   <option value="rejected">
                     Rejected
                   </option>
-
                 </select>
 
               </div>
-
             </div>
-
           </div>
 
           {/* =================================================
@@ -861,7 +780,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
           ================================================= */}
 
           {loading ? (
-
             <div className="p-10 text-center">
 
               <div className="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
@@ -871,7 +789,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
               </p>
 
             </div>
-
           ) : filteredJobs.length === 0 ? (
 
             /* EMPTY */
@@ -879,32 +796,25 @@ const EmployeeDashboard = ({ user: propUser }) => {
             <div className="p-10 text-center">
 
               <div className="w-16 h-16 mx-auto flex items-center justify-center bg-slate-100 rounded-full">
-
                 <Briefcase
                   size={28}
                   className="text-slate-400"
                 />
-
               </div>
 
               <h3 className="text-lg font-semibold text-slate-700 mt-4">
-
                 {jobs.length === 0
                   ? "No Jobs Found"
                   : "No Matching Jobs"}
-
               </h3>
 
               <p className="text-sm text-slate-500 mt-1">
-
                 {jobs.length === 0
-                  ? "Create your first job using the Create Job button."
+                  ? "No jobs are currently assigned or created by you."
                   : "Try changing your search or status filter."}
-
               </p>
 
             </div>
-
           ) : (
 
             /* TABLE */
@@ -990,19 +900,14 @@ const EmployeeDashboard = ({ user: propUser }) => {
                               <div>
 
                                 <p className="font-semibold text-slate-800">
-
                                   {job.jobTitle ||
                                     "Untitled Job"}
-
                                 </p>
 
                                 <p className="text-xs text-slate-400 mt-1">
-
                                   Created by:{" "}
-
                                   {job.createdBy ||
-                                    employeeId}
-
+                                    "N/A"}
                                 </p>
 
                               </div>
@@ -1016,10 +921,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
                           <td className="px-5 py-5">
 
                             <span className="font-medium text-slate-700">
-
                               {job.projectId ||
                                 "N/A"}
-
                             </span>
 
                           </td>
@@ -1029,10 +932,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
                           <td className="px-5 py-5">
 
                             <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">
-
                               {job.jobType ||
                                 "N/A"}
-
                             </span>
 
                           </td>
@@ -1046,10 +947,8 @@ const EmployeeDashboard = ({ user: propUser }) => {
                               <Clock size={15} />
 
                               <span className="font-semibold">
-
                                 {job.totalHours ||
                                   0}
-
                               </span>
 
                               <span className="text-xs text-slate-400">
@@ -1106,9 +1005,12 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
                                 <p className="text-xs text-red-500 mt-2 max-w-[180px]">
 
-                                  {job.rejectionReason}
+                                  {
+                                    job.rejectionReason
+                                  }
 
                                 </p>
+
                               )}
 
                           </td>
@@ -1162,6 +1064,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                           </td>
 
                         </tr>
+
                       );
                     }
                   )}
@@ -1171,6 +1074,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
               </table>
 
             </div>
+
           )}
 
         </div>
@@ -1197,6 +1101,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
           </div>
 
         </div>
+
       )}
 
       {/* =====================================================
@@ -1344,8 +1249,25 @@ const EmployeeDashboard = ({ user: propUser }) => {
 
                   <p className="font-semibold text-slate-800 mt-1">
 
+                    {employeeId ||
+                      "N/A"}
+
+                  </p>
+
+                </div>
+
+                {/* CREATED BY */}
+
+                <div className="bg-slate-50 rounded-lg p-4">
+
+                  <p className="text-xs text-slate-500">
+                    Created By
+                  </p>
+
+                  <p className="font-semibold text-slate-800 mt-1">
+
                     {selectedJob.createdBy ||
-                      employeeId}
+                      "N/A"}
 
                   </p>
 
@@ -1388,6 +1310,41 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 </div>
 
               </div>
+
+              {/* ASSIGNED EMPLOYEES */}
+
+              {Array.isArray(
+                selectedJob.assignedEmployees
+              ) &&
+                selectedJob.assignedEmployees
+                  .length > 0 && (
+
+                  <div className="mt-6">
+
+                    <p className="text-sm text-slate-500 mb-2">
+                      Assigned Employees
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+
+                      {selectedJob.assignedEmployees.map(
+                        (id) => (
+
+                          <span
+                            key={id}
+                            className="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-medium"
+                          >
+                            {id}
+                          </span>
+
+                        )
+                      )}
+
+                    </div>
+
+                  </div>
+
+                )}
 
               {/* STATUS */}
 
@@ -1440,7 +1397,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                 selectedJob.tasks
               ) &&
                 selectedJob.tasks.length >
-                0 && (
+                  0 && (
 
                   <div className="mt-6">
 
@@ -1477,9 +1434,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                             ) => (
 
                               <tr
-                                key={
-                                  index
-                                }
+                                key={index}
                               >
 
                                 <td className="px-4 py-3 text-sm text-slate-700">
@@ -1498,6 +1453,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                                 </td>
 
                               </tr>
+
                             )
                           )}
 
@@ -1508,6 +1464,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                     </div>
 
                   </div>
+
                 )}
 
               {/* REJECTION REASON */}
@@ -1532,6 +1489,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
                     </p>
 
                   </div>
+
                 )}
 
             </div>
@@ -1539,8 +1497,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
             {/* MODAL FOOTER */}
 
             <div className="flex justify-end gap-3 p-5 border-t">
-
-              {/* CLOSE */}
 
               <button
                 type="button"
@@ -1551,8 +1507,6 @@ const EmployeeDashboard = ({ user: propUser }) => {
               >
                 Close
               </button>
-
-              {/* DELETE */}
 
               <button
                 type="button"
@@ -1575,6 +1529,7 @@ const EmployeeDashboard = ({ user: propUser }) => {
           </div>
 
         </div>
+
       )}
 
     </div>

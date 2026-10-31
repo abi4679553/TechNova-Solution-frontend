@@ -33,9 +33,7 @@ const getStoredUser = () => {
     }
 
     return user;
-
   } catch (error) {
-
     console.error(
       "User Parse Error:",
       error
@@ -70,123 +68,81 @@ const AuthProvider = ({ children }) => {
   // ===================================================
 
   const checkAuth = async () => {
-
     try {
-
-      const response = await fetch(
-        "http://localhost:5000/check-auth",
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        }
-      );
-
-      const data =
-        await response.json();
-
-      console.log(
-        "CHECK AUTH RESPONSE:",
-        data
-      );
-
-      // ===============================================
-      // BACKEND AUTH SUCCESS
-      // ===============================================
-
-      if (
-        data?.success &&
-        data?.user
-      ) {
-
-        console.log(
-          "CHECK AUTH USER:",
-          data.user
+      const savedUser =
+        localStorage.getItem(
+          "currentUser"
         );
 
-        setCurrentUser(
-          data.user
-        );
-
-        setIsAuth(true);
-
-        localStorage.setItem(
-          "currentUser",
-          JSON.stringify(
-            data.user
-          )
-        );
-
-        return data.user;
-      }
-
-      // ===============================================
-      // BACKEND AUTH FAILED
-      // USE LOCAL STORAGE USER
-      // ===============================================
-
-      const storedUser =
-        getStoredUser();
-
-      if (storedUser) {
-
-        console.log(
-          "Using localStorage user:",
-          storedUser
-        );
-
-        setCurrentUser(
-          storedUser
-        );
-
-        setIsAuth(true);
-
-        return storedUser;
-      }
-
-      // ===============================================
       // NO USER
-      // ===============================================
+      if (!savedUser) {
+        console.log(
+          "No stored user found"
+        );
 
-      setCurrentUser(null);
+        setCurrentUser(null);
+        setIsAuth(false);
 
-      setIsAuth(false);
+        return null;
+      }
 
-      return null;
+      // PARSE USER
+      const parsedUser =
+        JSON.parse(savedUser);
+
+      // INVALID USER
+      if (
+        !parsedUser ||
+        typeof parsedUser !== "object"
+      ) {
+        console.log(
+          "Invalid stored user"
+        );
+
+        localStorage.removeItem(
+          "currentUser"
+        );
+
+        setCurrentUser(null);
+        setIsAuth(false);
+
+        return null;
+      }
+
+      // VALID USER
+      console.log(
+        "CHECK AUTH - USING STORED USER:",
+        parsedUser
+      );
+
+      setCurrentUser(parsedUser);
+      setIsAuth(true);
+
+      return parsedUser;
 
     } catch (error) {
-
       console.error(
         "Check auth error:",
         error
       );
 
-      // ===============================================
-      // IMPORTANT
-      // DO NOT REMOVE USER FROM LOCAL STORAGE
-      // ===============================================
-
+      // Keep localStorage user if available
       const storedUser =
         getStoredUser();
 
       if (storedUser) {
-
         console.log(
           "Check-auth failed. Using stored user:",
           storedUser
         );
 
-        setCurrentUser(
-          storedUser
-        );
-
+        setCurrentUser(storedUser);
         setIsAuth(true);
 
         return storedUser;
       }
 
       setCurrentUser(null);
-
       setIsAuth(false);
 
       return null;
@@ -198,9 +154,7 @@ const AuthProvider = ({ children }) => {
   // ===================================================
 
   useEffect(() => {
-
     checkAuth();
-
   }, []);
 
   // ===================================================
@@ -208,13 +162,11 @@ const AuthProvider = ({ children }) => {
   // ===================================================
 
   const logout = () => {
-
     localStorage.removeItem(
       "currentUser"
     );
 
     setCurrentUser(null);
-
     setIsAuth(false);
   };
 
@@ -223,7 +175,6 @@ const AuthProvider = ({ children }) => {
   // ===================================================
 
   return (
-
     <AuthContext.Provider
       value={{
         currentUser,
@@ -234,11 +185,8 @@ const AuthProvider = ({ children }) => {
         logout,
       }}
     >
-
       {children}
-
     </AuthContext.Provider>
-
   );
 };
 

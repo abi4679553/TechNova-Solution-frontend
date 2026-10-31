@@ -16,6 +16,7 @@ import {
   Sparkles,
   RefreshCw,
 } from "lucide-react";
+const API_URL = "https://technova-backend-hv79.onrender.com";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -86,7 +87,7 @@ const Notifications = () => {
       );
 
       const response = await fetch(
-        `http://localhost:5000/api/notifications/${adminId}`,
+       `${API_URL}/api/notifications/${adminId}`,
         {
           method: "GET",
           headers: {
@@ -238,7 +239,7 @@ const Notifications = () => {
       setActionLoading(notificationId);
 
       const response = await fetch(
-        `http://localhost:5000/api/notifications/read/${notificationId}`,
+       `${API_URL}/api/notifications/read/${notificationId}`,
         {
           method: "PUT",
           headers: {
@@ -331,7 +332,7 @@ const Notifications = () => {
       );
 
       const response = await fetch(
-        `http://localhost:5000/api/jobs/approve/${jobId}`,
+        `${API_URL}/api/jobs/approve/${jobId}`,
         {
           method: "PUT",
           headers: {
@@ -439,7 +440,7 @@ const Notifications = () => {
       );
 
       const response = await fetch(
-        `http://localhost:5000/api/jobs/reject/${jobId}`,
+        `${API_URL}/api/jobs/reject/${jobId}`,
         {
           method: "PUT",
           headers: {

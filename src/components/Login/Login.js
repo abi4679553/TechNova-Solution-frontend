@@ -14,6 +14,7 @@ import {
 } from "react-icons/ri";
 
 import logo from "../../Assests/logo.png";
+import EmployeeDashboard from "../Pages/EmployeeDashbord";
 
 const Login = () => {
 
@@ -80,7 +81,7 @@ const Login = () => {
       // ===============================================
 
       const response = await fetch(
-        "http://localhost:5000/login",
+        "https://technova-backend-hv79.onrender.com/login",
         {
           method: "POST",
 
@@ -177,74 +178,88 @@ const Login = () => {
         return;
       }
 
-      // ===============================================
-      // GET USER ID
-      // ===============================================
+      /// ===============================================
+// GET EMPLOYEE ID
+// ===============================================
 
-      const rawUserId =
-        data.user.Id ||
-        data.user.employeeId ||
-        data.user.id;
+const rawEmployeeId =
+    data.user.employeeId ||
+    data.user.Id || 
+    data.user.id;
 
-      if (!rawUserId) {
+if (!rawEmployeeId) {
 
-        console.error(
-          "User ID missing:",
-          data.user
-        );
+    console.error(
+        "Employee ID missing:",
+        data.user
+    );
 
-        alert(
-          "User ID not found"
-        );
+    alert(
+        "Employee ID not found"
+    );
 
-        return;
-      }
+    return;
+}
 
-      // ===============================================
-      // NORMALIZE USER ID
-      // ===============================================
+// ===============================================
+// NORMALIZE EMPLOYEE ID
+// ===============================================
 
-      const userId =
-        String(rawUserId)
-          .trim()
-          .toUpperCase();
+const employeeId =
+    String(rawEmployeeId)
+        .trim()
+        .toUpperCase();
 
-      // ===============================================
-      // NORMALIZE ROLE
-      // ===============================================
+        const userId = employeeId;
 
-      const role =
-        String(
-          data.user.role ||
-          ""
-        )
-          .trim()
-          .toLowerCase();
+// ===============================================
+// NORMALIZE MONGODB ID
+// ===============================================
 
-      // ===============================================
-      // CREATE CLEAN USER OBJECT
-      // ===============================================
+const mongoId =
+    data.user.id || "";
 
-      const loggedInUser = {
+// ===============================================
+// NORMALIZE ROLE
+// ===============================================
 
-        ...data.user,
+const role =
+    String(
+        data.user.role || ""
+    )
+        .trim()
+        .toLowerCase();
 
-        Id: userId,
+// ===============================================
+// CREATE CLEAN USER OBJECT
+// ===============================================
 
-        role: role,
+const loggedInUser = {
 
-      };
+    ...data.user,
 
-      // ===============================================
-      // SAVE USER
-      // ===============================================
+    id: mongoId,
 
-      localStorage.setItem(
-        "currentUser",
-        JSON.stringify(
-          loggedInUser
-        )
-      );
+    Id: employeeId,
+
+    employeeId: employeeId,
+
+    role: role,
+
+};
+
+// ===============================================
+// SAVE USER
+// ===============================================
+
+localStorage.setItem(
+    "currentUser",
+    JSON.stringify(
+        loggedInUser
+    )
+);
+
+localStorage.setItem("token", data.token);
 
       // ===============================================
       // DEBUG STORAGE

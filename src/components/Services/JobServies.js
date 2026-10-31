@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000";
+const API_URL = "https://technova-backend-hv79.onrender.com";
 
 // ==============================
 // CREATE JOB
@@ -35,8 +35,11 @@ export const createJob = async (jobData) => {
 // ==============================
 
 export const getEmployeeJobs = async (employeeId) => {
+  const normalizedEmployeeId =
+    String(employeeId).trim().toLowerCase();
+
   const response = await fetch(
-    `${API_URL}/api/jobs/employee-jobs/${employeeId}`
+    `${API_URL}/api/jobs/employee-job/${normalizedEmployeeId}`
   );
 
   const data = await response.json();
@@ -49,7 +52,6 @@ export const getEmployeeJobs = async (employeeId) => {
 
   return data;
 };
-
 
 // ==============================
 // GET EMPLOYEES

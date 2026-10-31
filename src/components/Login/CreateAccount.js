@@ -279,7 +279,7 @@ const CreateAccount = () => {
   const handleSendOTP = async () => {
     try {
       const response = await fetch(
-        "http://localhost:5000/send-otp",
+        "https://technova-backend-hv79.onrender.com/send-otp",
         {
           method: "POST",
 
@@ -329,7 +329,7 @@ const CreateAccount = () => {
       console.log("VERIFY REQUEST:", requestData);
 
       const response = await fetch(
-        "http://localhost:5000/Verify-otp",
+        "https://technova-backend-hv79.onrender.com/Verify-otp",
         {
           method: "POST",
 

@@ -1,13 +1,16 @@
-const API_URL = "http://localhost:5000";
+const API_URL = "https://technova-backend-hv79.onrender.com";
 
 // ===============================
 // CREATE JOB
 // ===============================
 export const createJob = async (jobData) => {
+  const token = localStorage.getItem("token");
+
   const response = await fetch(`${API_URL}/api/jobs/create-job`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(jobData),
   });
@@ -21,22 +24,33 @@ export const createJob = async (jobData) => {
   return data;
 };
 
-
 // ===============================
 // GET EMPLOYEE JOBS
 // ===============================
 export const getEmployeeJobs = async (employeeId) => {
-  const response = await fetch(
-    `${API_URL}/api/jobs/employee-job/${employeeId}`
-  );
+    const normalizedEmployeeId =
+        String(employeeId).trim().toUpperCase();
 
-  const data = await response.json();
+        const token = localStorage.getItem("token");
 
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch employee jobs");
-  }
+    const response = await fetch(
+        `${API_URL}/api/jobs/employee-job/${normalizedEmployeeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+    );
 
-  return data;
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || "Failed to fetch employee jobs"
+        );
+    }
+
+    return data;
 };
 
 
@@ -44,8 +58,15 @@ export const getEmployeeJobs = async (employeeId) => {
 // GET ALL JOBS
 // ===============================
 export const getAllJobs = async () => {
+  const token = localStorage.getItem("token");
+
   const response = await fetch(
-    `${API_URL}/api/jobs/all-jobs`
+    `${API_URL}/api/jobs/all-jobs`,{
+    headers : {
+      Authorization:`Bearer ${token}`,
+    },
+  }
+
   );
 
   const data = await response.json();
@@ -62,8 +83,14 @@ export const getAllJobs = async () => {
 // GET PENDING JOBS
 // ===============================
 export const getPendingJobs = async () => {
+  const token = localStorage.getItem("token");
   const response = await fetch(
-    `${API_URL}/api/jobs/pending-jobs`
+    `${API_URL}/api/jobs/pending-jobs`,
+    {
+      headers:{
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
 
   const data = await response.json();
@@ -86,6 +113,7 @@ export const approveJob = async (jobId) => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     }
   );
@@ -110,6 +138,7 @@ export const rejectJob = async (jobId, rejectionReason = "") => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+       Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
         rejectionReason,
@@ -135,6 +164,9 @@ export const deleteJob = async (jobId) => {
     `${API_URL}/api/jobs/delete/${jobId}`,
     {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     }
   );
 
@@ -152,8 +184,14 @@ export const deleteJob = async (jobId) => {
 // GET NOTIFICATIONS
 // ===============================
 export const getNotifications = async (userId) => {
+  const token = localStorage.getItem("token");
   const response = await fetch(
-    `${API_URL}/api/notifications/${userId}`
+    `${API_URL}/api/notifications/${userId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
 
   const data = await response.json();
@@ -170,12 +208,15 @@ export const getNotifications = async (userId) => {
 // MARK NOTIFICATION AS READ
 // ===============================
 export const markNotificationAsRead = async (notificationId) => {
+
+  const token = localStorage.getItem("token");
   const response = await fetch(
     `${API_URL}/api/notifications/read/${notificationId}`,
     {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     }
   );
@@ -194,8 +235,15 @@ export const markNotificationAsRead = async (notificationId) => {
 
 // GET ALL EMPLOYEES
 export const getAllEmployees = async () => {
+
+  const token = localStorage.getItem("token");
     const response = await fetch(
-        "http://localhost:5000/employees"
+        `${API_URL}/employees`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
     );
 
     const data = await response.json();

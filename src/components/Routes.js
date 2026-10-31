@@ -9,6 +9,8 @@ import Home from "./Home";
 import Admin from "./Pages/AdminDashbord.js";
 import Notifications from "./Pages/Notification.js";
 import CreateJob from "./Pages/CreateJob.js";
+import ImageUpload from "./Pages/ImageUpload.js";
+import Payment from "./Pages/Payment.js"; 
 
 const AppRoutes = () => {
   return (
@@ -44,6 +46,15 @@ const AppRoutes = () => {
           path="/create-job"
           element={<CreateJob />}
         />
+
+        <Route 
+        path="/image-upload"
+        element={<ImageUpload/>}
+        
+        />
+
+        <Route path="/payment" element={<Payment />} />
+
       </Routes>
     </div>
   );
