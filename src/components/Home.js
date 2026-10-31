@@ -1,41 +1,11 @@
 import React from "react";
 import logo from "../Assests/logo.png";
-import { RiArrowRightLine, RiShieldCheckLine, RiTeamLine, RiChat3Line, RiMegaphoneLine, RiTaskLine, RiDashboardLine, RiNotification3Line, RiUserSettingsLine, RiCheckboxCircleLine, } from "react-icons/ri";
+import { RiArrowRightLine, RiShieldCheckLine, RiTeamLine, RiCheckboxCircleLine, } from "react-icons/ri";
+import Features from "./Features";
+import About from "./About";
 
 const Home = () => {
-    const features = [
-        {
-            icon: <RiChat3Line />,
-            title: "Team Communication",
-            text: "Connect with your team and keep conversations organized in one place.",
-        },
-        {
-            icon: <RiMegaphoneLine />,
-            title: "Announcements",
-            text: "Share important company updates instantly with your entire organization.",
-        },
-        {
-            icon: <RiTaskLine />,
-            title: "Project Management",
-            text: "Create projects, assign tasks, track progress, and manage deadlines.",
-        },
-        {
-            icon: <RiDashboardLine />,
-            title: "Admin Dashboard",
-            text: "Get a complete overview of employees, projects, tasks and activities.",
-        },
-        {
-            icon: <RiUserSettingsLine />,
-            title: "Employee Management",
-            text: "Manage employees, teams, roles and responsibilities efficiently.",
-        },
-        {
-            icon: <RiNotification3Line />,
-            title: "Smart Notifications",
-            text: "Stay updated with important tasks, messages and company activities.",
-        },
-    ];
-
+   
     return (
         <main>
 
@@ -125,157 +95,13 @@ const Home = () => {
             </section>
 
             {/* ============== FEATURES ================= */}
-            <section className="bg-white py-20">
-
-                <div className="max-w-7xl mx-auto px-6">
-
-                    <div className="text-center max-w-2xl mx-auto mb-12">
-
-                       
-
-                        <h2 className="text-4xl font-bold text-secondary mt-2">
-                            Everything Your Team Needs
-                        </h2>
-
-                        <p className="text-gray-600 mt-4">
-                            Powerful tools designed to keep your entire organization
-                            connected, productive and organized.
-                        </p>
-
-                    </div>
-
-
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                        {features.map((feature, index) => (
-
-                            <div
-                                key={index}
-                                className="p-6 border border-gray-200 rounded-xl hover:-translate-y-1 hover:shadow-lg transition duration-300"
-                            >
-
-                                <div className="w-12 h-12 bg-blue-50 text-primary rounded-lg flex items-center justify-center text-2xl mb-5">
-                                    {feature.icon}
-                                </div>
-
-                                <h3 className="text-xl font-bold text-secondary">
-                                    {feature.title}
-                                </h3>
-
-                                <p className="text-gray-600 mt-3 leading-relaxed">
-                                    {feature.text}
-                                </p>
-
-                            </div>
-
-                        ))}
-
-                    </div>
-
-                </div>
-
+            <section className="bg-white ">
+             <Features />
             </section>
+            <About />
 
 
-            {/* ================= HOW IT WORKS ================= */}
-            <section className="bg-blue-50 py-20">
-
-                <div className="max-w-7xl mx-auto px-6">
-
-                    <div className="text-center mb-12">
-
-                        <h2 className="text-4xl font-bold text-secondary">
-                            How TechNova Works
-                        </h2>
-
-                        <p className="text-gray-600 mt-3">
-                            Simple workflow. Better collaboration.
-                        </p>
-
-                    </div>
-
-
-                    <div className="grid md:grid-cols-3 gap-8">
-
-                        <div className="text-center">
-
-                            <div className="w-14 h-14 mx-auto bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                                01
-                            </div>
-
-                            <h3 className="font-bold text-xl text-secondary mt-5">
-                                Create Workspace
-                            </h3>
-
-                            <p className="text-gray-600 mt-2">
-                                Set up your company workspace and manage your organization.
-                            </p>
-
-                        </div>
-
-
-                        <div className="text-center">
-
-                            <div className="w-14 h-14 mx-auto bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                                02
-                            </div>
-
-                            <h3 className="font-bold text-xl text-secondary mt-5">
-                                Assign & Collaborate
-                            </h3>
-
-                            <p className="text-gray-600 mt-2">
-                                Create projects, assign tasks and communicate with your team.
-                            </p>
-
-                        </div>
-
-
-                        <div className="text-center">
-
-                            <div className="w-14 h-14 mx-auto bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                                03
-                            </div>
-
-                            <h3 className="font-bold text-xl text-secondary mt-5">
-                                Stay Connected
-                            </h3>
-
-                            <p className="text-gray-600 mt-2">
-                                Receive updates, complete tasks and track your work.
-                            </p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* ================= CTA ================= */}
-            <section className="bg-primary py-16">
-
-                <div className="max-w-5xl mx-auto px-6 text-center text-white">
-
-                    <h2 className="text-4xl font-bold">
-                        Ready to Connect Your Team?
-                    </h2>
-
-                    <p className="mt-4 text-blue-100 text-lg">
-                        Bring your entire company together in one simple,
-                        powerful workspace.
-                    </p>
-
-                    <button className="mt-8 bg-white text-primary px-7 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-                        Start Your Workspace →
-                    </button>
-
-                </div>
-
-            </section>
-
+           
         </main>
     );
 };

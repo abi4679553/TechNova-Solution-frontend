@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 
@@ -9,8 +10,14 @@ import Home from "./Home";
 import Admin from "./Pages/AdminDashbord.js";
 import Notifications from "./Pages/Notification.js";
 import CreateJob from "./Pages/CreateJob.js";
+
+// Your new pages
 import ImageUpload from "./Pages/ImageUpload.js";
-import Payment from "./Pages/Payment.js"; 
+import Payment from "./Pages/Payment.js";
+
+// Team member's new pages
+import Features from "./Features.js";
+import About from "./About.js";
 
 const AppRoutes = () => {
   return (
@@ -19,42 +26,18 @@ const AppRoutes = () => {
 
       <Routes>
         <Route path="/" element={<Home />} />
-
         <Route path="/login" element={<Login />} />
+        <Route path="/create-account" element={<CreateAccount />} />
+        <Route path="/employee" element={<Employee />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/create-job" element={<CreateJob />} />
 
-        <Route
-          path="/create-account"
-          element={<CreateAccount />}
-        />
-
-        <Route
-          path="/employee"
-          element={<Employee />}
-        />
-
-        <Route
-          path="/admin"
-          element={<Admin />}
-        />
-
-        <Route
-          path="/notifications"
-          element={<Notifications />}
-        />
-
-        <Route
-          path="/create-job"
-          element={<CreateJob />}
-        />
-
-        <Route 
-        path="/image-upload"
-        element={<ImageUpload/>}
-        
-        />
-
+        <Route path="/image-upload" element={<ImageUpload />} />
         <Route path="/payment" element={<Payment />} />
 
+        <Route path="/Features" element={<Features />} />
+        <Route path="/About" element={<About />} />
       </Routes>
     </div>
   );
